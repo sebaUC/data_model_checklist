@@ -439,7 +439,7 @@ if(state.metrics){state.metrics.forEach(function(cat){if(cat.id==='m-riesgo'){va
   state.entities.forEach(function(e){if(order.indexOf(e.id)===-1)sorted.push(e)});
   if(JSON.stringify(sorted.map(function(e){return e.id}))!==JSON.stringify(state.entities.map(function(e){return e.id}))){changed=true}
   state.entities=sorted;
-  if(changed)localStorage.setItem('tm3_state',JSON.stringify(state));
+  if(changed)save();
 })();
 
 function save(){
