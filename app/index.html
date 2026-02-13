@@ -14,9 +14,6 @@
   .ptr{width:100%;height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden}
   .pfl{height:100%;background:linear-gradient(90deg,#3b82f6,#2563eb);border-radius:4px;transition:width .3s}
   .sec-title{max-width:900px;margin:0 auto 12px;font-size:13pt;color:#1e3a8a;padding-left:4px;border-left:4px solid #2563eb;padding:4px 10px}
-  .nav{max-width:900px;margin:0 auto 24px;background:#fff;border-radius:10px;padding:10px 16px;box-shadow:0 1px 3px rgba(0,0,0,.1);display:flex;flex-wrap:wrap;gap:5px;align-items:center}
-  .nc{display:inline-block;padding:4px 10px;border-radius:14px;font-size:7.5pt;font-weight:600;cursor:pointer;text-decoration:none;transition:transform .1s,box-shadow .1s}
-  .nc:hover{transform:translateY(-1px);box-shadow:0 2px 6px rgba(0,0,0,.15)}
   .mlist{max-width:900px;margin:0 auto 32px;display:flex;flex-direction:column;gap:20px}
   .mtbl-wrap{background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.1);overflow:hidden;position:relative}
   .mtbl{width:100%;border-collapse:collapse;font-size:9pt}
@@ -88,11 +85,9 @@
 </div>
 
 <h2 class="sec-title" id="sec-met">Metricas</h2>
-<nav class="nav" id="mnav"></nav>
 <div class="mlist" id="mgrid"></div>
 
 <h2 class="sec-title" id="sec-ent">Modelo de Datos</h2>
-<nav class="nav" id="nav"></nav>
 <div class="grid" id="grid"></div>
 
 <div class="modal-bg" id="modal">
@@ -125,14 +120,14 @@ var C={};COLORS.forEach(function(c){C[c.id]=c.hex});
 
 // ========== DEFAULT METRICS ==========
 var defaultMetrics = [
-  {id:"m-riesgo",name:"RIESGO (R01-R09)",color:"#EF5350",heads:["ID","Nombre","Rango","Calculo","Vistas"],items:[
-    ["R01","Riesgo Actual","0-100","Suma ponderada 6 factores","Todas"],
-    ["R02","Nivel de Riesgo","5 niveles","Umbrales sobre R01","Tarjetas, tablas, badges"],
-    ["R03","Tendencia","3 valores","Pendiente ventana 14-21 dias","Estudiantes, Resumen"],
-    ["R04","Delta Post Intervencion","-100 a +100","riesgo_antes - riesgo_despues","Resumen, Intervenciones"],
-    ["R05","Riesgo del Curso","0-100","Promedio ponderado estudiantes","Cursos, Dashboard"],
-    ["R06","Distribucion de Riesgo","5 conteos","COUNT por nivel","Dashboard, Cursos"],
-    ["R07","% Estudiantes en Riesgo","0-100","(alto + muyAlto) / total","Dashboard, Cursos"],
+  {id:"m-riesgo",name:"RIESGO (R01-R09)",color:"#EF5350",heads:["ID","Nombre","Rango","Calculo","Ubicacion"],items:[
+    ["R01","Riesgo Actual","0-1","predict_proba (normalizado respecto al threshold)","TABLA Predictions/risk_2c_normalized"],
+    ["R02","Nivel de Riesgo","5 niveles","Umbrales sobre R01","CALCULO USANDO R01"],
+    ["R03","Tendencia","3 valores","Pendiente ventana 14-21 dias","CALCULO USANDO R01 o R04"],
+    ["R04","Delta Post Intervencion","-1 a +1","riesgo_antes - riesgo_despues","CALCULO USANDO R01"],
+    ["R05","Riesgo del Curso","0-1","Promedio ponderado estudiantes","CALCULO USANDO R01 + PPA"],
+    ["R06","Distribucion de Riesgo","5 conteos","COUNT por nivel","Promedio alumnos entre alumnos/curso (R02)"],
+    ["R07","% Estudiantes en Riesgo","0-100","(alto + muyAlto) / total","CALCULO USANDO R02"],
     ["R08","Ranking por Riesgo","1-N","ORDER BY R05 DESC","Dashboard, Resumen"],
     ["R09","Riesgo Docente","0-100","AVG(R05 de sus cursos)","Docentes"]]},
   {id:"m-predictivas",name:"PREDICTIVAS (P01-P04)",color:"#AB47BC",heads:["ID","Nombre","Rango","Calculo","Vistas"],items:[
@@ -344,14 +339,6 @@ function uid(){return 'x'+Date.now()+Math.random().toString(36).slice(2,7)}
 
 // ========== RENDER ==========
 function render(){
-  // Metric nav
-  var mnav=document.getElementById('mnav');mnav.innerHTML='';
-  state.metrics.forEach(function(cat){
-    var a=document.createElement('a');a.className='nc';a.href='#mc-'+cat.id;
-    a.style.background=cat.color;a.style.color=tc(cat.color);a.textContent=cat.name;
-    mnav.appendChild(a);
-  });
-
   // Metric list (normal tables)
   var mgrid=document.getElementById('mgrid');mgrid.innerHTML='';
   state.metrics.forEach(function(cat,mi){
@@ -386,14 +373,6 @@ function render(){
   nmb.innerHTML='<span>+</span><small>Nueva categoria</small>';
   nmb.onclick=function(){openModal('m')};
   mgrid.appendChild(nmb);
-
-  // Entity nav
-  var nav=document.getElementById('nav');nav.innerHTML='';
-  state.entities.forEach(function(ent){
-    var a=document.createElement('a');a.className='nc';a.href='#c-'+ent.id;
-    a.style.background=ent.color;a.style.color=tc(ent.color);a.textContent=ent.name;
-    nav.appendChild(a);
-  });
 
   // Entity grid
   var grid=document.getElementById('grid');grid.innerHTML='';
@@ -508,11 +487,6 @@ document.addEventListener('blur',function(e){
     else if(ai!==undefined&&f){state.entities[gi].attrs[+ai][f]=txt}
   }
   save();
-  // Update nav chips
-  if(f==='name'){
-    var chips=sec==='m'?document.querySelectorAll('#mnav .nc'):document.querySelectorAll('#nav .nc');
-    if(chips[gi])chips[gi].textContent=txt;
-  }
 },true);
 
 document.addEventListener('keydown',function(e){
