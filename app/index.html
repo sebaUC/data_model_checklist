@@ -417,30 +417,27 @@ else if(!state.metrics){state.metrics=initMetrics()}
 if(state.metrics){state.metrics.forEach(function(cat){cat.items.forEach(function(it){if(it.fuente===undefined)it.fuente=it.src||"";if(it.ubicacion===undefined)it.ubicacion=it.tbl||"";if(it.calculo===undefined)it.calculo="";if(it.vistas===undefined)it.vistas="";delete it.src;delete it.tbl})})}
 // Migrate Riesgo: remove Calculo and Ubicacion from heads if still present
 if(state.metrics){state.metrics.forEach(function(cat){if(cat.id==='m-riesgo'){var rm=[];cat.heads.forEach(function(h,i){var l=h.toLowerCase();if(l==='calculo'||l==='ubicacion')rm.push(i)});if(rm.length){for(var i=rm.length-1;i>=0;i--){cat.heads.splice(rm[i],1);cat.items.forEach(function(it){if(it.v.length>rm[i])it.v.splice(rm[i],1)})}}}})}
-// Migrate: merge CSV entities into existing state (preserves checkboxes)
-;(function(){
+function migrateEntities(){
   var defMap={};defaultEntities.forEach(function(e){defMap[e.id]=e});
   var stateIds={};state.entities.forEach(function(e){stateIds[e.id]=true});
   var changed=false;
-  // Add new attrs to existing entities
   state.entities.forEach(function(ent){
     var def=defMap[ent.id];if(!def)return;
     var has={};ent.attrs.forEach(function(a){has[a.n]=true});
     def.attrs.forEach(function(da){if(!has[da[0]]){ent.attrs.push({n:da[0],d:da[1],t:da[2],ck:false});changed=true}});
   });
-  // Add entirely new entities
   defaultEntities.forEach(function(def){
     if(!stateIds[def.id]){state.entities.push({id:def.id,name:def.name,color:def.color,attrs:def.attrs.map(function(a){return{n:a[0],d:a[1],t:a[2],ck:false}})});changed=true}
   });
-  // Reorder to match defaultEntities grouping
   var order=defaultEntities.map(function(e){return e.id});
   var entMap={};state.entities.forEach(function(e){entMap[e.id]=e});
   var sorted=[];order.forEach(function(id){if(entMap[id])sorted.push(entMap[id])});
   state.entities.forEach(function(e){if(order.indexOf(e.id)===-1)sorted.push(e)});
   if(JSON.stringify(sorted.map(function(e){return e.id}))!==JSON.stringify(state.entities.map(function(e){return e.id}))){changed=true}
   state.entities=sorted;
-  if(changed)save();
-})();
+  return changed;
+}
+if(!firebaseReady&&migrateEntities()){localStorage.setItem('tm3_state',JSON.stringify(state))}
 
 function save(){
   localStorage.setItem('tm3_state',JSON.stringify(state));
@@ -451,7 +448,7 @@ function save(){
 if(firebaseReady){
   db.on('value',function(snap){
     var d=snap.val();
-    if(d){remoteUpdate=true;state=d;localStorage.setItem('tm3_state',JSON.stringify(state));render();remoteUpdate=false}
+    if(d){remoteUpdate=true;state=d;if(migrateEntities()){db.set(state)};localStorage.setItem('tm3_state',JSON.stringify(state));render();remoteUpdate=false}
   });
   firebase.database().ref('.info/connected').on('value',function(snap){
     var el=document.getElementById('sync-status'),dot=document.getElementById('sync-dot');
