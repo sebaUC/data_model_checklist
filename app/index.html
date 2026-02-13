@@ -40,6 +40,9 @@
   .mtbl select{font-size:8pt;padding:2px 4px;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;max-width:140px}
   .mtbl select:focus{border-color:#2563eb;outline:none}
   .mtbl td input[type="checkbox"]{width:14px;height:14px;cursor:pointer;accent-color:#555}
+  .mtbl .col-del{opacity:0;cursor:pointer;background:none;border:none;color:inherit;font-size:9pt;padding:0 2px;margin-left:4px;transition:opacity .15s;font-weight:700;vertical-align:middle}
+  .mtbl th:hover .col-del{opacity:.6}
+  .mtbl .col-del:hover{opacity:1}
   .mtbl .del-btn{opacity:0;cursor:pointer;background:none;border:none;color:#ef4444;font-size:11pt;padding:0 2px;transition:opacity .15s;font-weight:700}
   .mtbl tr:hover .del-btn{opacity:.7}
   .mtbl .del-btn:hover{opacity:1}
@@ -417,7 +420,7 @@ function render(){
     h+='<tr><th colspan="'+ncols+'" class="mh" style="background:'+hb+';color:'+txc+'"><span contenteditable="true" data-sec="m" data-gi="'+mi+'" data-f="name">'+esc(cat.name)+'</span></th></tr>';
     h+='<tr><th class="mc" style="background:'+cb+';color:'+txc+';width:30px"></th>';
     cat.heads.forEach(function(hd,hi){
-      h+='<th class="mc" style="background:'+cb+';color:'+txc+'"><span contenteditable="true" data-sec="m" data-gi="'+mi+'" data-hi="'+hi+'" data-f="head">'+esc(hd)+'</span></th>';
+      h+='<th class="mc" style="background:'+cb+';color:'+txc+'"><span contenteditable="true" data-sec="m" data-gi="'+mi+'" data-hi="'+hi+'" data-f="head">'+esc(hd)+'</span><button class="col-del" data-sec="m" data-gi="'+mi+'" data-hi="'+hi+'" title="Eliminar columna">&times;</button></th>';
     });
     extraCols.forEach(function(sc){
       h+='<th class="mc" style="background:'+cb+';color:'+txc+'">'+esc(sc.label)+'</th>';
@@ -539,6 +542,12 @@ document.addEventListener('click',function(e){
     sec=e.target.dataset.sec;gi=+e.target.dataset.gi;
     if(sec==='m'){state.metrics[gi].items.splice(+e.target.dataset.ri,1)}
     if(sec==='e'){state.entities[gi].attrs.splice(+e.target.dataset.ai,1)}
+    save();render();return;
+  }
+  // Delete column
+  if(e.target.classList.contains('col-del')){
+    sec=e.target.dataset.sec;gi=+e.target.dataset.gi;var hi=+e.target.dataset.hi;
+    if(sec==='m'){state.metrics[gi].heads.splice(hi,1);state.metrics[gi].items.forEach(function(it){if(it.v.length>hi)it.v.splice(hi,1)})}
     save();render();return;
   }
   // Delete card
