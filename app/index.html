@@ -440,7 +440,7 @@ function render(){
           h+='</select></td>';
         }else if(sc.type==='dropdown_tbl'){
           h+='<td><select data-sec="m" data-gi="'+mi+'" data-ri="'+ri+'" data-f="'+sc.key+'">';
-          h+='<option value="">-</option>';
+          FUENTE_OPTIONS.forEach(function(opt){h+='<option value="'+esc(opt)+'"'+(it[sc.key]===opt?' selected':'')+'>'+( opt||'-')+'</option>'});
           state.entities.forEach(function(ent){h+='<option value="'+esc(ent.name)+'"'+(it[sc.key]===ent.name?' selected':'')+'>'+esc(ent.name)+'</option>'});
           h+='</select></td>';
         }else{
