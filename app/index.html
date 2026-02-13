@@ -49,7 +49,7 @@
   .mtbl-wrap .add-row{border-top:1px solid rgba(0,0,0,.06)}
   .mtbl-wrap .card-del{position:absolute;top:6px;right:10px}
   .mlist .new-tbl-btn{min-height:50px;align-self:center;width:220px}
-  .grid{max-width:900px;margin:0 auto 32px;display:flex;flex-wrap:wrap;gap:24px;justify-content:center}
+  .grid{max-width:900px;margin:0 auto 32px;display:flex;flex-wrap:wrap;gap:24px;justify-content:center;align-items:start}
   .card{display:inline-block;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.12);border:1.5px solid #ccc;background:#fff;flex-shrink:0;position:relative}
   .etbl{border-collapse:collapse;font-size:8.5pt}
   .etbl th.eh{font-size:10pt;font-weight:700;padding:7px 16px;text-align:center;letter-spacing:.5px;text-transform:uppercase;border-bottom:1.5px solid rgba(0,0,0,.15)}
@@ -523,6 +523,8 @@ function render(){
 
   // Entity grid
   var grid=document.getElementById('grid');grid.innerHTML='';
+  // Build FK color map: lowercase name → color
+  var fkMap={};state.entities.forEach(function(e){fkMap[e.name.toLowerCase()]=e.color});
   state.entities.forEach(function(ent,ei){
     var col=ent.color,txc=tc(col),lb=rga(col,.10),hb=rga(col,.85),cb=rga(col,.55);
     var h='<button class="card-del" data-sec="e" data-gi="'+ei+'" title="Eliminar tabla">&times;</button>';
@@ -535,11 +537,16 @@ function render(){
     h+='<th class="ch" style="background:'+cb+';color:'+txc+';width:16px"></th></tr>';
     ent.attrs.forEach(function(a,ai){
       var bg=a.ck?rga(col,.22):lb;
+      var isFK=/^FK\b/i.test(a.d);
+      var fkColor='';
+      if(isFK){var kw={"usuario":"user","estudiante":"estudiante","curso":"curso","evento":"evento academico","recurso":"recurso lms","logro":"achievement","inscripcion":"enrollment"};
+        for(var k in kw){if(a.d.toLowerCase().indexOf(k)!==-1&&fkMap[kw[k]]){fkColor=fkMap[kw[k]];break}}}
+      var fkStyle=fkColor?'font-weight:700;color:'+fkColor:'';
       h+='<tr style="background:'+bg+'" data-sec="e" data-gi="'+ei+'" data-ai="'+ai+'">';
       h+='<td><input type="checkbox"'+(a.ck?' checked':'')+' data-sec="e" data-gi="'+ei+'" data-ai="'+ai+'"/></td>';
-      h+='<td><span contenteditable="true" data-sec="e" data-gi="'+ei+'" data-ai="'+ai+'" data-f="n">'+esc(a.n)+'</span></td>';
-      h+='<td><span contenteditable="true" data-sec="e" data-gi="'+ei+'" data-ai="'+ai+'" data-f="d">'+esc(a.d)+'</span></td>';
-      h+='<td><span contenteditable="true" data-sec="e" data-gi="'+ei+'" data-ai="'+ai+'" data-f="t">'+esc(a.t)+'</span></td>';
+      h+='<td style="'+fkStyle+'"><span contenteditable="true" data-sec="e" data-gi="'+ei+'" data-ai="'+ai+'" data-f="n">'+esc(a.n)+'</span></td>';
+      h+='<td style="'+fkStyle+'"><span contenteditable="true" data-sec="e" data-gi="'+ei+'" data-ai="'+ai+'" data-f="d">'+esc(a.d)+'</span></td>';
+      h+='<td style="'+fkStyle+'"><span contenteditable="true" data-sec="e" data-gi="'+ei+'" data-ai="'+ai+'" data-f="t">'+esc(a.t)+'</span></td>';
       h+='<td><button class="del-btn" data-sec="e" data-gi="'+ei+'" data-ai="'+ai+'" title="Eliminar">&times;</button></td>';
       h+='</tr>';
     });
