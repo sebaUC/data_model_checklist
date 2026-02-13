@@ -60,6 +60,11 @@
   .etbl td:last-child{font-size:7.5pt;text-align:right}
   .etbl tr:last-child td{border-bottom:none}
   .etbl td input[type="checkbox"]{width:13px;height:13px;cursor:pointer;accent-color:#555}
+  .etbl .drag-h{cursor:grab;opacity:0;font-size:9pt;color:#999;user-select:none;transition:opacity .15s;padding:0 2px}
+  .etbl tr:hover .drag-h{opacity:.5}
+  .etbl .drag-h:hover{opacity:1}
+  .etbl tr.drag-over{border-top:2px solid #42A5F5}
+  .etbl tr.dragging{opacity:.3}
   .etbl .del-btn{opacity:0;cursor:pointer;background:none;border:none;color:#ef4444;font-size:11pt;padding:0 2px;transition:opacity .15s;font-weight:700}
   .etbl tr:hover .del-btn{opacity:.7}
   .etbl .del-btn:hover{opacity:1}
@@ -529,8 +534,9 @@ function render(){
     var col=ent.color,txc=tc(col),lb=rga(col,.10),hb=rga(col,.85),cb=rga(col,.55);
     var h='<button class="card-del" data-sec="e" data-gi="'+ei+'" title="Eliminar tabla">&times;</button>';
     h+='<table class="etbl">';
-    h+='<tr><th colspan="5" class="eh" style="background:'+hb+';color:'+txc+';"><span contenteditable="true" data-sec="e" data-gi="'+ei+'" data-f="name">'+esc(ent.name)+'</span></th></tr>';
-    h+='<tr><th class="ch" style="background:'+cb+';color:'+txc+';width:20px"></th>';
+    h+='<tr><th colspan="6" class="eh" style="background:'+hb+';color:'+txc+';"><span contenteditable="true" data-sec="e" data-gi="'+ei+'" data-f="name">'+esc(ent.name)+'</span></th></tr>';
+    h+='<tr><th class="ch" style="background:'+cb+';color:'+txc+';width:14px"></th>';
+    h+='<th class="ch" style="background:'+cb+';color:'+txc+';width:20px"></th>';
     h+='<th class="ch" style="background:'+cb+';color:'+txc+';">Atributo</th>';
     h+='<th class="ch" style="background:'+cb+';color:'+txc+';">Descripcion</th>';
     h+='<th class="ch" style="background:'+cb+';color:'+txc+';text-align:right">Tipo</th>';
@@ -543,6 +549,7 @@ function render(){
         for(var k in kw){if(a.d.toLowerCase().indexOf(k)!==-1&&fkMap[kw[k]]){fkColor=fkMap[kw[k]];break}}}
       var fkStyle=fkColor?'font-weight:700;color:'+fkColor:'';
       h+='<tr style="background:'+bg+'" data-sec="e" data-gi="'+ei+'" data-ai="'+ai+'">';
+      h+='<td><span class="drag-h">&#10303;</span></td>';
       h+='<td><input type="checkbox"'+(a.ck?' checked':'')+' data-sec="e" data-gi="'+ei+'" data-ai="'+ai+'"/></td>';
       h+='<td style="'+fkStyle+'"><span contenteditable="true" data-sec="e" data-gi="'+ei+'" data-ai="'+ai+'" data-f="n">'+esc(a.n)+'</span></td>';
       h+='<td style="'+fkStyle+'"><span contenteditable="true" data-sec="e" data-gi="'+ei+'" data-ai="'+ai+'" data-f="d">'+esc(a.d)+'</span></td>';
@@ -689,6 +696,50 @@ function createNew(){
   save();render();closeModal();
 }
 document.getElementById('m-name').addEventListener('keydown',function(e){if(e.key==='Enter')createNew()});
+
+// ========== DRAG & DROP ATTRIBUTES ==========
+var dragSrcGi=null,dragSrcAi=null;
+document.addEventListener('mousedown',function(e){
+  if(!e.target.classList.contains('drag-h'))return;
+  var tr=e.target.closest('tr[data-ai]');if(tr)tr.draggable=true;
+});
+document.addEventListener('mouseup',function(){
+  document.querySelectorAll('tr[draggable]').forEach(function(el){el.draggable=false});
+});
+document.addEventListener('dragstart',function(e){
+  var tr=e.target.closest&&e.target.closest('tr[data-ai]');
+  if(!tr||tr.dataset.sec!=='e')return;
+  dragSrcGi=+tr.dataset.gi;dragSrcAi=+tr.dataset.ai;
+  tr.classList.add('dragging');
+  e.dataTransfer.effectAllowed='move';
+  e.dataTransfer.setData('text/plain',dragSrcAi);
+});
+document.addEventListener('dragover',function(e){
+  var tr=e.target.closest&&e.target.closest('tr[data-ai]');
+  if(!tr||tr.dataset.sec!=='e'||+tr.dataset.gi!==dragSrcGi)return;
+  e.preventDefault();e.dataTransfer.dropEffect='move';
+  document.querySelectorAll('.drag-over').forEach(function(el){el.classList.remove('drag-over')});
+  tr.classList.add('drag-over');
+});
+document.addEventListener('dragleave',function(e){
+  var tr=e.target.closest&&e.target.closest('tr[data-ai]');
+  if(tr)tr.classList.remove('drag-over');
+});
+document.addEventListener('drop',function(e){
+  var tr=e.target.closest&&e.target.closest('tr[data-ai]');
+  if(!tr||tr.dataset.sec!=='e'||+tr.dataset.gi!==dragSrcGi)return;
+  e.preventDefault();
+  var toAi=+tr.dataset.ai;
+  if(dragSrcAi===toAi)return;
+  var attrs=state.entities[dragSrcGi].attrs;
+  var moved=attrs.splice(dragSrcAi,1)[0];
+  attrs.splice(toAi,0,moved);
+  save();render();
+});
+document.addEventListener('dragend',function(){
+  dragSrcGi=null;dragSrcAi=null;
+  document.querySelectorAll('.dragging,.drag-over').forEach(function(el){el.classList.remove('dragging','drag-over')});
+});
 
 // ========== EXPORT / IMPORT ==========
 function exportState(){
