@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TM3 - Data Model Checklist</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#e8e8e8;color:#1e293b;padding:20px}
+  h1.mt{text-align:center;font-size:20pt;color:#1e3a8a;margin-bottom:6px}
+  p.st{text-align:center;color:#64748b;margin-bottom:24px;font-size:9pt}
+  .pbar{max-width:900px;margin:0 auto 24px;background:#fff;border-radius:10px;padding:12px 20px;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+  .pbar .lb{font-size:9pt;color:#64748b;margin-bottom:5px;display:flex;justify-content:space-between}
+  .ptr{width:100%;height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden}
+  .pfl{height:100%;background:linear-gradient(90deg,#3b82f6,#2563eb);border-radius:4px;transition:width .3s}
+  .sec-title{max-width:900px;margin:0 auto 12px;font-size:13pt;color:#1e3a8a;padding-left:4px;border-left:4px solid #2563eb;padding:4px 10px}
+  .nav{max-width:900px;margin:0 auto 24px;background:#fff;border-radius:10px;padding:10px 16px;box-shadow:0 1px 3px rgba(0,0,0,.1);display:flex;flex-wrap:wrap;gap:5px;align-items:center}
+  .nc{display:inline-block;padding:4px 10px;border-radius:14px;font-size:7.5pt;font-weight:600;cursor:pointer;text-decoration:none;transition:transform .1s,box-shadow .1s}
+  .nc:hover{transform:translateY(-1px);box-shadow:0 2px 6px rgba(0,0,0,.15)}
+  .grid{max-width:900px;margin:0 auto 32px;display:flex;flex-wrap:wrap;gap:24px;justify-content:center}
+  .card{display:inline-block;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.12);border:1.5px solid #ccc;background:#fff;flex-shrink:0;position:relative}
+  .etbl{border-collapse:collapse;font-size:8.5pt}
+  .etbl th.eh{font-size:10pt;font-weight:700;padding:7px 16px;text-align:center;letter-spacing:.5px;text-transform:uppercase;border-bottom:1.5px solid rgba(0,0,0,.15)}
+  .etbl th.ch{font-size:8pt;font-weight:600;padding:5px 10px;text-align:left;border-bottom:1px solid rgba(0,0,0,.12)}
+  .etbl td{padding:4px 10px;border-bottom:1px solid rgba(0,0,0,.06);font-size:8pt;vertical-align:middle;transition:background .15s}
+  .etbl td:nth-child(2){font-family:'Consolas','Monaco',monospace;font-weight:600;font-size:7.5pt;white-space:nowrap}
+  .etbl td:nth-child(3){max-width:200px}
+  .etbl td:last-child{font-size:7.5pt;text-align:right}
+  .etbl tr:last-child td{border-bottom:none}
+  .etbl td input[type="checkbox"]{width:13px;height:13px;cursor:pointer;accent-color:#555}
+  .etbl .del-btn{opacity:0;cursor:pointer;background:none;border:none;color:#ef4444;font-size:11pt;padding:0 2px;transition:opacity .15s;font-weight:700}
+  .etbl tr:hover .del-btn{opacity:.7}
+  .etbl .del-btn:hover{opacity:1}
+  .add-row{display:flex;justify-content:center;padding:4px;border-top:1px solid rgba(0,0,0,.06)}
+  .add-row button{background:none;border:1px dashed #aaa;border-radius:6px;padding:2px 14px;font-size:7.5pt;color:#888;cursor:pointer;transition:all .15s}
+  .add-row button:hover{border-color:#555;color:#555;background:rgba(0,0,0,.03)}
+  .card-del{position:absolute;top:4px;right:8px;background:none;border:none;font-size:13pt;cursor:pointer;opacity:0;transition:opacity .15s;color:#c00;font-weight:700;z-index:2}
+  .card:hover .card-del{opacity:.6}
+  .card-del:hover{opacity:1!important}
+  [contenteditable]{outline:none;border-radius:2px;padding:0 2px;transition:background-color .15s}
+  [contenteditable]:hover{background:rgba(59,130,246,.08)}
+  [contenteditable]:focus{background:rgba(59,130,246,.12);box-shadow:0 0 0 1.5px rgba(59,130,246,.25)}
+  .new-tbl-btn{background:#fff;border:2px dashed #bbb;border-radius:10px;min-width:180px;min-height:100px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;gap:6px;padding:20px}
+  .new-tbl-btn:hover{border-color:#666;background:#fafafa}
+  .new-tbl-btn span{font-size:24pt;color:#aaa;line-height:1}
+  .new-tbl-btn small{font-size:8pt;color:#999}
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center}
+  .modal-bg.open{display:flex}
+  .modal{background:#fff;border-radius:12px;padding:24px;min-width:300px;box-shadow:0 8px 30px rgba(0,0,0,.2)}
+  .modal h3{font-size:12pt;margin-bottom:16px;color:#333}
+  .modal label{font-size:9pt;color:#555;display:block;margin-bottom:4px;margin-top:12px}
+  .modal input[type="text"]{width:100%;padding:6px 10px;border:1px solid #ccc;border-radius:6px;font-size:9pt}
+  .color-opts{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap}
+  .color-opt{width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:border-color .15s}
+  .color-opt:hover,.color-opt.sel{border-color:#333}
+  .modal-btns{margin-top:20px;display:flex;gap:8px;justify-content:flex-end}
+  .modal-btns button{padding:6px 16px;border-radius:6px;font-size:9pt;cursor:pointer;font-weight:600}
+  .btn-cancel{background:#eee;border:1px solid #ccc;color:#555}
+  .btn-ok{background:#2563eb;border:none;color:#fff}
+  .btn-ok:hover{background:#1d4ed8}
+</style>
+</head>
+<body>
+
+<h1 class="mt">TM3 Data Model Checklist</h1>
+<p class="st">Plataforma de Alerta Temprana - Universidad Autonoma de Chile</p>
+
+<div class="pbar">
+  <div class="lb"><span>Progreso General</span><span id="ptxt">0/0 (0%)</span></div>
+  <div class="ptr"><div class="pfl" id="pfill" style="width:0%"></div></div>
+</div>
+
+<h2 class="sec-title" id="sec-met">Metricas</h2>
+<nav class="nav" id="mnav"></nav>
+<div class="grid" id="mgrid"></div>
+
+<h2 class="sec-title" id="sec-ent">Modelo de Datos</h2>
+<nav class="nav" id="nav"></nav>
+<div class="grid" id="grid"></div>
+
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <h3 id="m-title">Nueva Tabla</h3>
+    <label>Nombre</label>
+    <input type="text" id="m-name" placeholder="NOMBRE">
+    <label>Color</label>
+    <div class="color-opts" id="m-colors"></div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-ok" onclick="createNew()">Crear</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var ALL_COLORS = [
+  {hex:'#EF5350'},{hex:'#AB47BC'},{hex:'#42A5F5'},{hex:'#66BB6A'},{hex:'#FFA726'},
+  {hex:'#FDD835'},{hex:'#F48FB1'},{hex:'#26C6DA'},{hex:'#5C6BC0'},{hex:'#78909C'},
+  {hex:'#29B6F6'},{hex:'#EC407A'},{hex:'#9CCC65'},{hex:'#B0BEC5'}
+];
+var COLORS = [
+  {id:'yellow',hex:'#FDD835',label:'Student'},{id:'red',hex:'#EF5350',label:'Course'},
+  {id:'blue',hex:'#42A5F5',label:'Professor'},{id:'green',hex:'#66BB6A',label:'Intervention'},
+  {id:'orange',hex:'#FFA726',label:'LMS'},{id:'pink',hex:'#F48FB1',label:'User'},
+  {id:'gray',hex:'#B0BEC5',label:'Relation'}
+];
+var C={};COLORS.forEach(function(c){C[c.id]=c.hex});
+
+// ========== DEFAULT METRICS ==========
+var defaultMetrics = [
+  {id:"m-riesgo",name:"RIESGO (R01-R09)",color:"#EF5350",heads:["ID","Nombre","Rango","Calculo","Vistas"],items:[
+    ["R01","Riesgo Actual","0-100","Suma ponderada 6 factores","Todas"],
+    ["R02","Nivel de Riesgo","5 niveles","Umbrales sobre R01","Tarjetas, tablas, badges"],
+    ["R03","Tendencia","3 valores","Pendiente ventana 14-21 dias","Estudiantes, Resumen"],
+    ["R04","Delta Post Intervencion","-100 a +100","riesgo_antes - riesgo_despues","Resumen, Intervenciones"],
+    ["R05","Riesgo del Curso","0-100","Promedio ponderado estudiantes","Cursos, Dashboard"],
+    ["R06","Distribucion de Riesgo","5 conteos","COUNT por nivel","Dashboard, Cursos"],
+    ["R07","% Estudiantes en Riesgo","0-100","(alto + muyAlto) / total","Dashboard, Cursos"],
+    ["R08","Ranking por Riesgo","1-N","ORDER BY R05 DESC","Dashboard, Resumen"],
+    ["R09","Riesgo Docente","0-100","AVG(R05 de sus cursos)","Docentes"]]},
+  {id:"m-predictivas",name:"PREDICTIVAS (P01-P04)",color:"#AB47BC",heads:["ID","Nombre","Rango","Calculo","Vistas"],items:[
+    ["P01","Probabilidad de Exito","0-100%","Modelo XGBoost","Estudiantes, Resumen"],
+    ["P02","Responsividad","0-100%","(respondidas/total) x factor_tiempo","Resumen"],
+    ["P03","Ultima Actividad","datetime","MAX(timestamp) de logs","Estudiantes"],
+    ["P04","Gap de Inactividad","horas","NOW() - P03","Alertas"]]},
+  {id:"m-intervencion",name:"INTERVENCION (I01-I09)",color:"#66BB6A",heads:["ID","Nombre","Rango","Calculo","Vistas"],items:[
+    ["I01","Intervenciones Activas","0-N","COUNT donde estado=EnProgreso","Estudiantes, Resumen"],
+    ["I02","Total Intervenciones","0-N","COUNT all","Resumen, Intervenciones"],
+    ["I03","Respuestas Positivas","0-N","COUNT positivas","Resumen, Intervenciones"],
+    ["I04","Tasa de Efectividad","0-100%","(exitosas / I02) x 100","Resumen, Intervenciones"],
+    ["I05","Tiempo de Respuesta","horas","AVG(tiempoRespuesta)","Intervenciones"],
+    ["I06","N de Intentos","0-N","SUM(nIntentos)","Intervenciones"],
+    ["I07","Puntos de Conflicto","0-N","COUNT donde Delta >= 0","Resumen"],
+    ["I08","Efectividad por Tipo","objeto","GROUP BY tipo, calc I04","Intervenciones"],
+    ["I09","Efectividad por Estrategia","objeto","GROUP BY estrategia","Intervenciones"]]},
+  {id:"m-academicas",name:"ACADEMICAS (A01-A08)",color:"#42A5F5",heads:["ID","Nombre","Rango","Calculo","Vistas"],items:[
+    ["A01","PGA Acumulado","1.0-7.0","Promedio ponderado historico","Rendimiento"],
+    ["A02","PGA Semestre","1.0-7.0","Promedio semestre actual","Rendimiento"],
+    ["A03","Tasa de Aprobacion","0-100%","(aprobados / cursados) x 100","Rendimiento"],
+    ["A04","% Sobre Promedio","0-100%","(cursos > media / total) x 100","Rendimiento"],
+    ["A05","Nota por Curso","1.0-7.0","Nota directa del libro","Rendimiento"],
+    ["A06","Percentil por Curso","0-100","PERCENT_RANK en curso","Rendimiento"],
+    ["A07","Distribucion de Clase","objeto","{min, q1, median, q3, max}","Rendimiento"],
+    ["A08","Estado Academico","5 estados","Reglas institucionales","Rendimiento"]]},
+  {id:"m-factores",name:"FACTORES (F01-F07)",color:"#FFA726",heads:["ID","Factor","Peso","Inputs Principales","Vista"],items:[
+    ["F01","Asistencia","15%","asistenciaPct, consecutivas","Radar"],
+    ["F02","Tareas","20%","tasa_entrega, puntualidad","Radar"],
+    ["F03","Rendimiento","25%","PGA, percentil","Radar"],
+    ["F04","Engagement","20%","sesiones, recursos, foros","Radar"],
+    ["F05","Social","10%","posts, mensajes, grupos","Radar"],
+    ["F06","Academico","10%","PGA_historico, reprobados","Radar"],
+    ["F07","Peso Curso en Riesgo","0-1","riesgo_curso x creditos","Resumen"]]},
+  {id:"m-calendario",name:"CALENDARIO (C01-C07)",color:"#26C6DA",heads:["ID","Nombre","Rango","Calculo","Vistas"],items:[
+    ["C01","Asistencia %","0-100","(asistidos / total) x 100","Calendario"],
+    ["C02","Inasistencias","0-N","COUNT donde estado=NoAsistio","Calendario"],
+    ["C03","Sobrecarga","dias","Dias con >3 eventos","Calendario"],
+    ["C04","Proximas Evaluaciones","0-N","COUNT en proximos 14 dias","Calendario"],
+    ["C05","Inasistencias Consecutivas","0-N","MAX racha consecutiva","Alertas"],
+    ["C06","Ritmo Semanal","eventos/sem","AVG eventos por semana","Calendario"],
+    ["C07","Asistencia por Tipo","objeto","GROUP BY tipo evento","Calendario"]]},
+  {id:"m-participacion",name:"PARTICIPACION (PA01-PA04)",color:"#5C6BC0",heads:["ID","Nombre","Rango","Calculo","Vistas"],items:[
+    ["PA01","Participacion Semestre","0-100","Compuesto: LMS + recursos + foro","Dashboard, Cursos"],
+    ["PA02","Participacion 7 dias","0-100","PA01 ventana corta","Cursos, Detalle"],
+    ["PA03","Tendencia Participacion","3 valores","PA02 actual vs anterior","Cursos"],
+    ["PA04","Participacion Sistemica","0-100","AVG(PA01) todos","Dashboard"]]},
+  {id:"m-sistema",name:"SISTEMA (S01-S07)",color:"#78909C",heads:["ID","Nombre","Rango","Calculo","Vistas"],items:[
+    ["S01","Total Estudiantes","0-N","COUNT activos","Dashboard"],
+    ["S02","Cursos Activos","0-N","COUNT con inscritos","Dashboard"],
+    ["S03","Cursos Criticos","0-N","COUNT donde R05 > umbral","Dashboard"],
+    ["S04","Cursos Riesgo Moderado","0-N","COUNT rango moderado","Cursos"],
+    ["S05","Cursos Estables","0-N","COUNT bajo riesgo","Cursos"],
+    ["S06","Promedio Est/Curso","0-N","AVG(totalEstudiantes)","Cursos"],
+    ["S07","% Est. Riesgo Global","0-100","SUM(R07) / S01","Dashboard"]]},
+  {id:"m-perfil",name:"PERFIL INGRESO (E01-E20)",color:"#FDD835",heads:["ID","Nombre","Tipo"],items:[
+    ["E01","PAES Matematica 1","100-1000"],["E02","PAES Matematica 2","100-1000"],
+    ["E03","PAES Comprension Lectora","100-1000"],["E04","PAES Ciencias","100-1000"],
+    ["E05","NEM","1.0-7.0"],["E06","Ranking EM","0-1000"],
+    ["E07","Tipo Establecimiento","4 valores"],["E08","Region Origen","string"],
+    ["E09","Sector","Urbano/Rural"],["E10","Estado Beca","boolean"],
+    ["E11","Tipo Beca","string"],["E12","% Cobertura","0-100"],
+    ["E13","Primera Generacion","boolean"],["E14","Trabaja","boolean"],
+    ["E15","Quintil","1-5"],["E16","Riesgo Socioeconomico","0-100"],
+    ["E17","Puntaje Ingreso","100-1000"],["E18","Ranking Admision","1-N"],
+    ["E19","Tipo Ingreso","5 valores"],["E20","Percentil Nacional","0-100"]]},
+  {id:"m-docente",name:"ACTIVIDAD DOCENTE (T01-T06)",color:"#29B6F6",heads:["ID","Nombre","Rango","Fuente","Vistas"],items:[
+    ["T01","Sesiones Canvas (semana)","0-N","Canvas API","Docentes"],
+    ["T02","Sesiones TM3 (semana)","0-N","Logs TM3","Docentes"],
+    ["T03","Recursos Publicados","0-N","Canvas API","Docentes"],
+    ["T04","Mensajes Enviados","0-N","Canvas API","Docentes"],
+    ["T05","Puntaje ECA","1.0-7.0","Sistema evaluacion","Docentes, Cursos"],
+    ["T06","Anos Experiencia","0-N","Sistema RRHH","Docentes, Cursos"]]},
+  {id:"m-comunidad",name:"COMUNIDAD (COM01-COM08)",color:"#EC407A",heads:["ID","Nombre","Rango","Calculo","Vistas"],items:[
+    ["COM01","Nivel de Participacion","0-100","Compuesto: posts + respuestas + actividad","Comunidad"],
+    ["COM02","Tasa de Respuesta","0-100","(respuestas / preguntas recibidas) x 100","Comunidad"],
+    ["COM03","Preguntas Realizadas","0-N","COUNT preguntas en canales","Comunidad"],
+    ["COM04","Respuestas Utiles","0-N","COUNT respuestas marcadas utiles","Comunidad"],
+    ["COM05","Conexiones Formadas","0-N","COUNT peers contactados","Comunidad"],
+    ["COM06","Match Score","0-100","Algoritmo: cursos + horarios + habilidades","Companeros"],
+    ["COM07","Contribuciones","0-N","COUNT aportes en canales/foros","Companeros por Curso"],
+    ["COM08","Response Rate Staff","0-100","(respondidas / consultas) x 100","Equipo Docente"]]},
+  {id:"m-estilo",name:"ESTILO / COMPETENCIAS / CAMINOS",color:"#9CCC65",heads:["ID","Nombre","Rango","Calculo","Vistas"],items:[
+    ["EST01","Perfil VARK","4x(0-100)","Scores por dimension de aprendizaje","Mi Progreso"],
+    ["COMP01","Valor Competencia","0-100","Score por area de competencia","Mi Progreso"],
+    ["COMP02","Nivel General","0-100","AVG(COMP01 all areas)","Mi Progreso"],
+    ["PATH01","Requisitos Cumplidos","boolean","Logica por perfil + dificultad","Caminos"],
+    ["PATH02","Es Recomendado","boolean","Logica por perfil estudiante","Caminos"],
+    ["PATH03","Dificultad","1-5","Hardcoded por camino","Caminos"]]}
+];
+
+// ========== DEFAULT ENTITIES ==========
+var defaultEntities = [
+  {id:"estudiante",name:"ESTUDIANTE",color:C.yellow,attrs:[
+    ["id","Identificador unico","UUID"],["nombre","Nombre completo","STRING"],["estado","Activo|Inactivo|Suspendido","ENUM"],
+    ["carrera","Programa academico","STRING"],["facultad","Facultad de pertenencia","STRING"],["semestre","Semestre cursando (1-12+)","INT"],
+    ["cohorte","Ano-periodo de ingreso","STRING"],["region","Region de residencia","STRING"],["ultimaActividad","Ultimo evento en LMS","DATETIME"],
+    ["sesionesTotales","Total sesiones en periodo","INT"],["sesionesPorSemana","Promedio semanal sesiones","FLOAT"],
+    ["gapMedioHoras","Horas promedio entre sesiones","FLOAT"],["actividadFinDeSemana","% actividad fin de semana","FLOAT"],
+    ["entropiaNavegacion","Diversidad patrones navegacion","FLOAT"],["riesgoActual","Suma ponderada 6 factores (0-100)","INT"],
+    ["nivelRiesgo","MuyBajo|Bajo|Medio|Alto|MuyAlto","ENUM"],["tendencia","Mejorando|Estable|Empeorando","ENUM"],
+    ["probabilidadExito","Output modelo XGBoost (0-100%)","FLOAT"],["responsividad","Tasa respuesta intervenciones","FLOAT"],
+    ["tiempoMedioRespuesta","Promedio horas hasta responder","FLOAT"],["intervencionesActivas","Intervenciones en progreso","INT"]]},
+  {id:"perfil-ingreso",name:"PERFIL DE INGRESO",color:C.yellow,attrs:[
+    ["paesMatematica1","Puntaje PAES Mat 1 (100-1000)","INT"],["paesMatematica2","Puntaje PAES Mat 2 (100-1000)","INT"],
+    ["paesLectora","Puntaje PAES Lectora (100-1000)","INT"],["paesCiencias","Puntaje PAES Ciencias (100-1000)","INT"],
+    ["nem","Nota Ensenanza Media (1.0-7.0)","FLOAT"],["ranking","Ranking en establecimiento","INT"],
+    ["tipoEstablecimiento","Municipal|SLEP|Subvencionado|Particular","STRING"],["region","Region de origen","STRING"],
+    ["sector","Urbano | Rural","STRING"],["quintil","Quintil socioeconomico (1-5)","INT"],
+    ["tieneBeca","Si tiene beca","BOOL"],["tipoBeca","Tipo de beca asignada","STRING"],
+    ["primeraGeneracion","Primera generacion universitaria","BOOL"],["trabaja","Trabaja mientras estudia","BOOL"]]},
+  {id:"learning-goal",name:"LEARNING GOAL",color:C.yellow,attrs:[
+    ["id","Identificador unico","UUID"],["estudianteId","FK al estudiante","UUID"],["titulo","Titulo de la meta","STRING"],
+    ["dificultad","Facil|Media|Dificil","ENUM"],["progreso","Progreso actual (0-100)","INT"],
+    ["completada","Meta completada","BOOL"],["esPersonalizada","Creada por el estudiante","BOOL"]]},
+  {id:"learning-style",name:"LEARNING STYLE",color:C.yellow,attrs:[
+    ["name","Visual|Auditivo|Lectura|Kinestesico","STRING"],["score","Afinidad con el estilo (0-100)","INT"],
+    ["description","Descripcion del estilo","STRING"],["recommendations","Recomendaciones para el estilo","STRING[]"]]},
+  {id:"competence-area",name:"COMPETENCE AREA",color:C.yellow,attrs:[
+    ["name","Nombre de la competencia","STRING"],["value","Nivel de dominio (0-100)","INT"],
+    ["description","Descripcion de la competencia","STRING"],["relatedCourses","Cursos asociados","STRING[]"]]},
+  {id:"learning-path",name:"LEARNING PATH",color:C.yellow,attrs:[
+    ["id","Identificador unico","UUID"],["title","Nombre del camino","STRING"],["description","Descripcion corta","STRING"],
+    ["prerequisitesMet","Cumple requisitos","BOOL"],["isRecommended","Recomendado para estudiante","BOOL"],
+    ["difficulty","Dificultad (1-5)","INT"],["timeCommitment","Dedicacion (ej: 4-6 hrs/sem)","STRING"],
+    ["benefits","Beneficios del camino","STRING[]"],["skills","Habilidades que desarrolla","STRING[]"]]},
+  {id:"community-metrics",name:"COMMUNITY METRICS",color:C.yellow,attrs:[
+    ["estudianteId","FK al estudiante","UUID"],["participationLevel","Nivel participacion (0-100)","INT"],
+    ["responseRate","Tasa respuesta (0-100)","INT"],["discussionCount","Participaciones en discusiones","INT"],
+    ["helpfulResponsesGiven","Respuestas utiles dadas","INT"],["questionsAsked","Preguntas realizadas","INT"],
+    ["connectionsFormed","Conexiones formadas","INT"]]},
+  {id:"curso",name:"CURSO",color:C.red,attrs:[
+    ["id","Identificador unico","UUID"],["codigo","Codigo con seccion (MAT101-P01)","VARCHAR"],["codigoBase","Codigo sin seccion","VARCHAR"],
+    ["nombre","Nombre de la asignatura","STRING"],["seccion","Identificador de seccion","VARCHAR"],["creditos","Creditos academicos","INT"],
+    ["semestre","Codigo de periodo (2025-2)","VARCHAR"],["ano","Ano academico","INT"],["fechaInicio","Inicio del periodo","DATETIME"],
+    ["fechaFin","Fin del periodo","DATETIME"],["totalEstudiantes","Total inscritos","INT"],["riesgoCurso","Riesgo ponderado (0-100)","INT"],
+    ["nivelRiesgoCurso","Estable|Moderado|Critico","ENUM"],["distribucionRiesgo","{muyBajo,bajo,medio,alto,muyAlto}","JSON"],
+    ["pctEstudiantesRiesgo","% estudiantes riesgo alto","FLOAT"],["rankingRiesgo","Posicion por riesgo DESC","INT"],
+    ["participacionPromedio","Participacion semestral %","FLOAT"],["participacionCorta","Participacion 7 dias %","FLOAT"],
+    ["tendenciaParticipacion","Subiendo|Estable|Bajando","ENUM"]]},
+  {id:"docente",name:"DOCENTE",color:C.blue,attrs:[
+    ["id","Identificador unico","UUID"],["nombre","Nombre completo","STRING"],["anosExperiencia","Anos de docencia","INT"],
+    ["tipoContrato","Regular|Part-time|Adjunto","ENUM"],["puntajeECA","Evaluacion docente (1.0-7.0)","FLOAT"],
+    ["totalCursos","Cantidad cursos que imparte","INT"],["totalEstudiantes","Suma estudiantes en cursos","INT"],
+    ["sesionesLMS","Sesiones Canvas 7 dias","INT"],["sesionesTM3","Sesiones TM3 7 dias","INT"],
+    ["recursosPublicados","Recursos publicados 7 dias","INT"],["mensajesEnviados","Mensajes enviados 7 dias","INT"],
+    ["riesgoDocente","Promedio riesgo de cursos","FLOAT"]]},
+  {id:"course-staff",name:"COURSE STAFF",color:C.blue,attrs:[
+    ["id","Identificador unico","UUID"],["name","Nombre completo","STRING"],["role","Titular|Ayudante|Coordinador","STRING"],
+    ["email","Correo electronico","STRING"],["photo","URL foto o iniciales","STRING"],["availability","{days, hours}","JSON"],
+    ["expertise","Areas de especialidad","STRING[]"],["responseRate","Tasa de respuesta (0-100)","INT"],["courseId","FK al curso","UUID"]]},
+  {id:"intervencion",name:"INTERVENCION",color:C.green,attrs:[
+    ["id","Identificador unico","UUID"],["tipo","Mensaje|Llamada|Ayudantia|Taller|Mentoria","ENUM"],["estrategia","STEM|Teorico","ENUM"],
+    ["intensidad","Leve|Intensiva","ENUM"],["estudianteId","FK al estudiante","UUID"],["cursoId","FK al curso (opcional)","UUID?"],
+    ["fechaInicio","Inicio de la intervencion","DATETIME"],["fechaCierre","Cierre (null si activa)","DATETIME?"],
+    ["tiempoRespuesta","Horas hasta primera respuesta","FLOAT"],["nIntentos","Intentos de contacto","INT"],
+    ["estado","Exitosa|EnProgreso|SinRespuesta|Fallida","ENUM"],["nRespuestasPositivas","Respuestas favorables","INT"],
+    ["deltaRiesgoPost","Cambio riesgo post (-100 a +100)","INT"]]},
+  {id:"recurso-lms",name:"RECURSO LMS",color:C.orange,attrs:[
+    ["cursoId","FK al curso","UUID"],["tipo","Comunicacion|Contenido|Evaluacion","ENUM"],
+    ["consumoTotal","Consumo total del recurso","INT"],["tendenciaUso","Subiendo|Estable|Bajando","ENUM"]]},
+  {id:"hito-aprendizaje",name:"HITO DE APRENDIZAJE",color:C.orange,attrs:[
+    ["id","Identificador unico","UUID"],["cursoId","FK al curso","UUID"],["nombre","Nombre del hito","STRING"],
+    ["orden","Orden secuencial","INT"],["dificultad","Dificultad (1-5)","INT"],["tiempoEstimado","Tiempo estimado","STRING"],
+    ["criterioComplecion","Reglas de completitud","JSON"]]},
+  {id:"achievement",name:"ACHIEVEMENT",color:C.pink,attrs:[
+    ["id","Identificador unico","UUID"],["nombre","Nombre del logro","STRING"],["descripcion","Descripcion del logro","STRING"],
+    ["tipo","consistencia|academico|social|exploracion","ENUM"],["valorRequerido","Valor para desbloquear","INT"],["icono","Icono del logro","STRING"]]},
+  {id:"support-contact",name:"SUPPORT CONTACT",color:C.pink,attrs:[
+    ["id","Identificador unico","UUID"],["tipo","email|instagram|telefono|web","ENUM"],["valor","Email, URL o telefono","STRING"],
+    ["label","Etiqueta descriptiva","STRING"],["activo","Contacto activo","BOOL"]]},
+  {id:"evaluacion",name:"EVALUACION",color:C.gray,attrs:[
+    ["cursoId","FK al curso","UUID"],["tipo","Control|Prueba|Examen|Tarea|Quiz","ENUM"],["fecha","Fecha de la evaluacion","DATETIME"],
+    ["pesoCalificacion","Peso en calificacion (%)","FLOAT"],["promedio","Nota promedio (1.0-7.0)","FLOAT"],
+    ["mediana","Mediana de notas","FLOAT"],["tasaAprobacion","Tasa aprobacion (%)","FLOAT"]]},
+  {id:"evento-academico",name:"EVENTO ACADEMICO",color:C.gray,attrs:[
+    ["cursoId","FK al curso","UUID"],["tipo","Clase|Ayudantia|Lab|Evaluacion|Entregable","ENUM"],["fecha","Fecha del evento","DATETIME"],
+    ["duracion","Duracion en minutos","INT"],["recurrente","Si es recurrente","BOOL"]]},
+  {id:"asistencia",name:"ASISTENCIA",color:C.gray,attrs:[
+    ["estudianteId","FK al estudiante","UUID"],["eventoId","FK al evento academico","UUID"],
+    ["estado","Presente|Ausente|Justificado|Tardanza","ENUM"],["patronInasistencias","Inasistencias consecutivas","INT"]]},
+  {id:"student-achievement",name:"STUDENT ACHIEVEMENT",color:C.gray,attrs:[
+    ["estudianteId","FK al estudiante","UUID"],["achievementId","FK al logro","UUID"],["valorActual","Progreso actual","INT"],
+    ["porcentaje","Completado (0-100)","INT"],["estado","en_progreso|conseguido","ENUM"],["fechaConseguido","Fecha logro (null si no)","DATETIME?"]]},
+  {id:"community-channel",name:"COMMUNITY CHANNEL",color:C.gray,attrs:[
+    ["id","Identificador unico","UUID"],["type","telegram|whatsapp|discord|teams","ENUM"],["link","URL del canal","STRING"],
+    ["name","Nombre del canal","STRING"],["description","Descripcion corta","STRING"],["memberCount","Cantidad de miembros","INT"],
+    ["activeDiscussions","Conversaciones activas","INT"],["lastActive","Ultima actividad","DATETIME"],["courseId","FK al curso","UUID"]]},
+  {id:"study-group",name:"STUDY GROUP",color:C.gray,attrs:[
+    ["id","Identificador unico","UUID"],["name","Nombre del grupo","STRING"],["courseId","FK al curso","UUID"],
+    ["members","Cantidad de miembros","INT"],["focus","Objetivo del grupo","STRING"],["meetingTime","Horario reunion","STRING"],
+    ["isOpen","Acepta nuevos miembros","BOOL"],["createdBy","FK al estudiante creador","UUID"]]}
+];
+
+// ========== STATE ==========
+function initMetrics(){return defaultMetrics.map(function(m){return{id:m.id,name:m.name,color:m.color,heads:m.heads.slice(),items:m.items.map(function(it){return{v:it.slice(),ck:false}})}})}
+function initEntities(){return defaultEntities.map(function(e){return{id:e.id,name:e.name,color:e.color,attrs:e.attrs.map(function(a){return{n:a[0],d:a[1],t:a[2],ck:false}})}})}
+
+var state=JSON.parse(localStorage.getItem('tm3_state')||'null');
+if(!state){state={metrics:initMetrics(),entities:initEntities()}}
+else if(!state.metrics){state.metrics=initMetrics()}
+function save(){localStorage.setItem('tm3_state',JSON.stringify(state))}
+
+// ========== HELPERS ==========
+function tc(hex){var r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return(.299*r+.587*g+.114*b)/255>.6?'#333':'#fff'}
+function rga(hex,a){return'rgba('+parseInt(hex.slice(1,3),16)+','+parseInt(hex.slice(3,5),16)+','+parseInt(hex.slice(5,7),16)+','+a+')'}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function uid(){return 'x'+Date.now()+Math.random().toString(36).slice(2,7)}
+
+// ========== RENDER ==========
+function render(){
+  // Metric nav
+  var mnav=document.getElementById('mnav');mnav.innerHTML='';
+  state.metrics.forEach(function(cat){
+    var a=document.createElement('a');a.className='nc';a.href='#mc-'+cat.id;
+    a.style.background=cat.color;a.style.color=tc(cat.color);a.textContent=cat.name;
+    mnav.appendChild(a);
+  });
+
+  // Metric grid
+  var mgrid=document.getElementById('mgrid');mgrid.innerHTML='';
+  state.metrics.forEach(function(cat,mi){
+    var col=cat.color,txc=tc(col),lb=rga(col,.10),hb=rga(col,.85),cb=rga(col,.55);
+    var ncols=cat.heads.length+2;
+    var h='<button class="card-del" data-sec="m" data-gi="'+mi+'" title="Eliminar">&times;</button>';
+    h+='<table class="etbl">';
+    h+='<tr><th colspan="'+ncols+'" class="eh" style="background:'+hb+';color:'+txc+'"><span contenteditable="true" data-sec="m" data-gi="'+mi+'" data-f="name">'+esc(cat.name)+'</span></th></tr>';
+    h+='<tr><th class="ch" style="background:'+cb+';color:'+txc+';width:20px"></th>';
+    cat.heads.forEach(function(hd,hi){
+      h+='<th class="ch" style="background:'+cb+';color:'+txc+'"><span contenteditable="true" data-sec="m" data-gi="'+mi+'" data-hi="'+hi+'" data-f="head">'+esc(hd)+'</span></th>';
+    });
+    h+='<th class="ch" style="background:'+cb+';color:'+txc+';width:16px"></th></tr>';
+    cat.items.forEach(function(it,ri){
+      var bg=it.ck?rga(col,.22):lb;
+      h+='<tr style="background:'+bg+'">';
+      h+='<td><input type="checkbox"'+(it.ck?' checked':'')+' data-sec="m" data-gi="'+mi+'" data-ri="'+ri+'"/></td>';
+      it.v.forEach(function(val,ci){
+        h+='<td><span contenteditable="true" data-sec="m" data-gi="'+mi+'" data-ri="'+ri+'" data-ci="'+ci+'">'+esc(val)+'</span></td>';
+      });
+      h+='<td><button class="del-btn" data-sec="m" data-gi="'+mi+'" data-ri="'+ri+'" title="Eliminar">&times;</button></td>';
+      h+='</tr>';
+    });
+    h+='</table>';
+    h+='<div class="add-row"><button data-sec="m" data-gi="'+mi+'">+ metrica</button></div>';
+    var card=document.createElement('div');card.className='card';card.id='mc-'+cat.id;
+    card.style.borderColor=rga(col,.4);card.innerHTML=h;
+    mgrid.appendChild(card);
+  });
+  // New metric category button
+  var nmb=document.createElement('div');nmb.className='new-tbl-btn';
+  nmb.innerHTML='<span>+</span><small>Nueva categoria</small>';
+  nmb.onclick=function(){openModal('m')};
+  mgrid.appendChild(nmb);
+
+  // Entity nav
+  var nav=document.getElementById('nav');nav.innerHTML='';
+  state.entities.forEach(function(ent){
+    var a=document.createElement('a');a.className='nc';a.href='#c-'+ent.id;
+    a.style.background=ent.color;a.style.color=tc(ent.color);a.textContent=ent.name;
+    nav.appendChild(a);
+  });
+
+  // Entity grid
+  var grid=document.getElementById('grid');grid.innerHTML='';
+  state.entities.forEach(function(ent,ei){
+    var col=ent.color,txc=tc(col),lb=rga(col,.10),hb=rga(col,.85),cb=rga(col,.55);
+    var h='<button class="card-del" data-sec="e" data-gi="'+ei+'" title="Eliminar tabla">&times;</button>';
+    h+='<table class="etbl">';
+    h+='<tr><th colspan="5" class="eh" style="background:'+hb+';color:'+txc+';"><span contenteditable="true" data-sec="e" data-gi="'+ei+'" data-f="name">'+esc(ent.name)+'</span></th></tr>';
+    h+='<tr><th class="ch" style="background:'+cb+';color:'+txc+';width:20px"></th>';
+    h+='<th class="ch" style="background:'+cb+';color:'+txc+';">Atributo</th>';
+    h+='<th class="ch" style="background:'+cb+';color:'+txc+';">Descripcion</th>';
+    h+='<th class="ch" style="background:'+cb+';color:'+txc+';text-align:right">Tipo</th>';
+    h+='<th class="ch" style="background:'+cb+';color:'+txc+';width:16px"></th></tr>';
+    ent.attrs.forEach(function(a,ai){
+      var bg=a.ck?rga(col,.22):lb;
+      h+='<tr style="background:'+bg+'" data-sec="e" data-gi="'+ei+'" data-ai="'+ai+'">';
+      h+='<td><input type="checkbox"'+(a.ck?' checked':'')+' data-sec="e" data-gi="'+ei+'" data-ai="'+ai+'"/></td>';
+      h+='<td><span contenteditable="true" data-sec="e" data-gi="'+ei+'" data-ai="'+ai+'" data-f="n">'+esc(a.n)+'</span></td>';
+      h+='<td><span contenteditable="true" data-sec="e" data-gi="'+ei+'" data-ai="'+ai+'" data-f="d">'+esc(a.d)+'</span></td>';
+      h+='<td><span contenteditable="true" data-sec="e" data-gi="'+ei+'" data-ai="'+ai+'" data-f="t">'+esc(a.t)+'</span></td>';
+      h+='<td><button class="del-btn" data-sec="e" data-gi="'+ei+'" data-ai="'+ai+'" title="Eliminar">&times;</button></td>';
+      h+='</tr>';
+    });
+    h+='</table>';
+    h+='<div class="add-row"><button data-sec="e" data-gi="'+ei+'">+ atributo</button></div>';
+    var card=document.createElement('div');card.className='card';card.id='c-'+ent.id;
+    card.style.borderColor=rga(col,.4);card.innerHTML=h;
+    grid.appendChild(card);
+  });
+  var nb=document.createElement('div');nb.className='new-tbl-btn';nb.id='new-btn';
+  nb.innerHTML='<span>+</span><small>Nueva tabla</small>';
+  nb.onclick=function(){openModal('e')};
+  grid.appendChild(nb);
+
+  updateProgress();
+}
+
+function updateProgress(){
+  var t=0,c=0;
+  state.metrics.forEach(function(m){m.items.forEach(function(it){t++;if(it.ck)c++})});
+  state.entities.forEach(function(e){e.attrs.forEach(function(a){t++;if(a.ck)c++})});
+  var p=t>0?Math.round(c/t*100):0;
+  document.getElementById('ptxt').textContent=c+'/'+t+' ('+p+'%)';
+  document.getElementById('pfill').style.width=p+'%';
+}
+
+// ========== EVENTS ==========
+document.addEventListener('change',function(e){
+  if(e.target.type!=='checkbox')return;
+  var sec=e.target.dataset.sec,gi=+e.target.dataset.gi;
+  if(sec==='m'&&e.target.dataset.ri!==undefined){
+    var ri=+e.target.dataset.ri;
+    state.metrics[gi].items[ri].ck=e.target.checked;save();
+    var tr=e.target.closest('tr'),col=state.metrics[gi].color;
+    tr.style.background=e.target.checked?rga(col,.22):rga(col,.10);
+    updateProgress();
+  }
+  if(sec==='e'&&e.target.dataset.ai!==undefined){
+    var ai=+e.target.dataset.ai;
+    state.entities[gi].attrs[ai].ck=e.target.checked;save();
+    var tr=e.target.closest('tr'),col=state.entities[gi].color;
+    tr.style.background=e.target.checked?rga(col,.22):rga(col,.10);
+    updateProgress();
+  }
+});
+
+document.addEventListener('click',function(e){
+  var sec,gi,btn;
+  // Delete row
+  if(e.target.classList.contains('del-btn')){
+    sec=e.target.dataset.sec;gi=+e.target.dataset.gi;
+    if(sec==='m'){state.metrics[gi].items.splice(+e.target.dataset.ri,1)}
+    if(sec==='e'){state.entities[gi].attrs.splice(+e.target.dataset.ai,1)}
+    save();render();return;
+  }
+  // Delete card
+  if(e.target.classList.contains('card-del')){
+    sec=e.target.dataset.sec;gi=+e.target.dataset.gi;
+    if(sec==='m'&&state.metrics.length>1){state.metrics.splice(gi,1)}
+    if(sec==='e'&&state.entities.length>1){state.entities.splice(gi,1)}
+    save();render();return;
+  }
+  // Add row
+  btn=e.target.closest('.add-row button');
+  if(btn){
+    sec=btn.dataset.sec;gi=+btn.dataset.gi;
+    if(sec==='m'){
+      var empty=state.metrics[gi].heads.map(function(){return'-'});
+      state.metrics[gi].items.push({v:empty,ck:false});
+    }
+    if(sec==='e'){
+      state.entities[gi].attrs.push({n:'nuevo_attr',d:'Descripcion',t:'STRING',ck:false});
+    }
+    save();render();return;
+  }
+});
+
+document.addEventListener('blur',function(e){
+  if(!e.target.hasAttribute||!e.target.hasAttribute('contenteditable'))return;
+  var f=e.target.dataset.f,sec=e.target.dataset.sec,gi=e.target.dataset.gi;
+  if(!sec||gi===undefined)return;
+  var txt=e.target.textContent.trim();if(!txt)return;
+  gi=+gi;
+  if(sec==='m'){
+    if(f==='name'){state.metrics[gi].name=txt}
+    else if(f==='head'&&e.target.dataset.hi!==undefined){state.metrics[gi].heads[+e.target.dataset.hi]=txt}
+    else if(e.target.dataset.ri!==undefined&&e.target.dataset.ci!==undefined){state.metrics[gi].items[+e.target.dataset.ri].v[+e.target.dataset.ci]=txt}
+  }
+  if(sec==='e'){
+    var ai=e.target.dataset.ai;
+    if(f==='name'){state.entities[gi].name=txt}
+    else if(ai!==undefined&&f){state.entities[gi].attrs[+ai][f]=txt}
+  }
+  save();
+  // Update nav chips
+  if(f==='name'){
+    var chips=sec==='m'?document.querySelectorAll('#mnav .nc'):document.querySelectorAll('#nav .nc');
+    if(chips[gi])chips[gi].textContent=txt;
+  }
+},true);
+
+document.addEventListener('keydown',function(e){
+  if(e.key==='Enter'&&e.target.hasAttribute&&e.target.hasAttribute('contenteditable')){e.preventDefault();e.target.blur()}
+});
+
+// ========== MODAL ==========
+var selColor=ALL_COLORS[0].hex,modalFor='e';
+function openModal(target){
+  modalFor=target;
+  document.getElementById('m-title').textContent=target==='m'?'Nueva Categoria de Metricas':'Nueva Tabla';
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('m-name').value='';
+  var mc=document.getElementById('m-colors');mc.innerHTML='';
+  ALL_COLORS.forEach(function(c){
+    var d=document.createElement('div');d.className='color-opt'+(c.hex===selColor?' sel':'');
+    d.style.background=c.hex;
+    d.onclick=function(){selColor=c.hex;mc.querySelectorAll('.color-opt').forEach(function(o){o.classList.remove('sel')});d.classList.add('sel')};
+    mc.appendChild(d);
+  });
+  document.getElementById('m-name').focus();
+}
+function closeModal(){document.getElementById('modal').classList.remove('open')}
+function createNew(){
+  var name=document.getElementById('m-name').value.trim().toUpperCase();
+  if(!name){document.getElementById('m-name').focus();return}
+  if(modalFor==='m'){
+    state.metrics.push({id:uid(),name:name,color:selColor,heads:["ID","Nombre","Rango","Calculo","Vistas"],items:[{v:["-","-","-","-","-"],ck:false}]});
+  }else{
+    state.entities.push({id:uid(),name:name,color:selColor,attrs:[{n:'id',d:'Identificador unico',t:'UUID',ck:false}]});
+  }
+  save();render();closeModal();
+}
+document.getElementById('m-name').addEventListener('keydown',function(e){if(e.key==='Enter')createNew()});
+
+render();
+</script>
+</body>
+</html>
