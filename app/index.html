@@ -138,16 +138,16 @@ var C={};COLORS.forEach(function(c){C[c.id]=c.hex});
 
 // ========== DEFAULT METRICS ==========
 var defaultMetrics = [
-  {id:"m-riesgo",name:"RIESGO (R01-R09)",color:"#EF5350",heads:["ID","Nombre","Rango","Calculo"],items:[
-    ["R01","Riesgo Actual","0-1","predict_proba (normalizado respecto al threshold)"],
-    ["R02","Nivel de Riesgo","5 niveles","Umbrales sobre R01"],
-    ["R03","Tendencia","3 valores","Pendiente ventana 14-21 dias"],
-    ["R04","Delta Post Intervencion","-1 a +1","riesgo_antes - riesgo_despues"],
-    ["R05","Riesgo del Curso","0-1","Promedio ponderado estudiantes"],
-    ["R06","Distribucion de Riesgo","5 conteos","COUNT por nivel"],
-    ["R07","% Estudiantes en Riesgo","0-100","(alto + muyAlto) / total"],
-    ["R08","Ranking por Riesgo","1-N","ORDER BY R05 DESC"],
-    ["R09","Riesgo Docente","0-100","AVG(R05 de sus cursos)"]]},
+  {id:"m-riesgo",name:"RIESGO (R01-R09)",color:"#EF5350",heads:["ID","Nombre","Rango"],items:[
+    ["R01","Riesgo Actual","0-1"],
+    ["R02","Nivel de Riesgo","5 niveles"],
+    ["R03","Tendencia","3 valores"],
+    ["R04","Delta Post Intervencion","-1 a +1"],
+    ["R05","Riesgo del Curso","0-1"],
+    ["R06","Distribucion de Riesgo","5 conteos"],
+    ["R07","% Estudiantes en Riesgo","0-100"],
+    ["R08","Ranking por Riesgo","1-N"],
+    ["R09","Riesgo Docente","0-100"]]},
   {id:"m-predictivas",name:"PREDICTIVAS (P01-P04)",color:"#AB47BC",heads:["ID","Nombre","Rango","Calculo","Vistas"],items:[
     ["P01","Probabilidad de Exito","0-100%","Modelo XGBoost","Estudiantes, Resumen"],
     ["P02","Responsividad","0-100%","(respondidas/total) x factor_tiempo","Resumen"],
