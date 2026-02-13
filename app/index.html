@@ -375,6 +375,8 @@ if(!state){state={metrics:initMetrics(),entities:initEntities()}}
 else if(!state.metrics){state.metrics=initMetrics()}
 // Migrate: add standard fields to existing metric items
 if(state.metrics){state.metrics.forEach(function(cat){cat.items.forEach(function(it){if(it.fuente===undefined)it.fuente=it.src||"";if(it.ubicacion===undefined)it.ubicacion=it.tbl||"";if(it.calculo===undefined)it.calculo="";if(it.vistas===undefined)it.vistas="";delete it.src;delete it.tbl})})}
+// Migrate Riesgo: remove Calculo and Ubicacion from heads if still present
+if(state.metrics){state.metrics.forEach(function(cat){if(cat.id==='m-riesgo'){var rm=[];cat.heads.forEach(function(h,i){var l=h.toLowerCase();if(l==='calculo'||l==='ubicacion')rm.push(i)});if(rm.length){for(var i=rm.length-1;i>=0;i--){cat.heads.splice(rm[i],1);cat.items.forEach(function(it){if(it.v.length>rm[i])it.v.splice(rm[i],1)})}}}})}
 
 function save(){
   localStorage.setItem('tm3_state',JSON.stringify(state));
