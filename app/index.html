@@ -17,6 +17,23 @@
   .nav{max-width:900px;margin:0 auto 24px;background:#fff;border-radius:10px;padding:10px 16px;box-shadow:0 1px 3px rgba(0,0,0,.1);display:flex;flex-wrap:wrap;gap:5px;align-items:center}
   .nc{display:inline-block;padding:4px 10px;border-radius:14px;font-size:7.5pt;font-weight:600;cursor:pointer;text-decoration:none;transition:transform .1s,box-shadow .1s}
   .nc:hover{transform:translateY(-1px);box-shadow:0 2px 6px rgba(0,0,0,.15)}
+  .mlist{max-width:900px;margin:0 auto 32px;display:flex;flex-direction:column;gap:20px}
+  .mtbl-wrap{background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.1);overflow:hidden;position:relative}
+  .mtbl{width:100%;border-collapse:collapse;font-size:9pt}
+  .mtbl th.mh{font-size:11pt;font-weight:700;padding:8px 16px;text-align:left;letter-spacing:.5px;text-transform:uppercase;border-bottom:1.5px solid rgba(0,0,0,.15)}
+  .mtbl th.mc{font-size:8.5pt;font-weight:600;padding:6px 14px;text-align:left;border-bottom:1px solid rgba(0,0,0,.12)}
+  .mtbl td{padding:5px 14px;border-bottom:1px solid rgba(0,0,0,.06);font-size:8.5pt;vertical-align:middle;transition:background .15s}
+  .mtbl td:first-child{width:30px}
+  .mtbl td:nth-child(2){font-family:'Consolas','Monaco',monospace;font-weight:700;font-size:8.5pt;white-space:nowrap;width:60px}
+  .mtbl td:last-child{width:24px;text-align:right}
+  .mtbl tr:last-child td{border-bottom:none}
+  .mtbl td input[type="checkbox"]{width:14px;height:14px;cursor:pointer;accent-color:#555}
+  .mtbl .del-btn{opacity:0;cursor:pointer;background:none;border:none;color:#ef4444;font-size:11pt;padding:0 2px;transition:opacity .15s;font-weight:700}
+  .mtbl tr:hover .del-btn{opacity:.7}
+  .mtbl .del-btn:hover{opacity:1}
+  .mtbl-wrap .add-row{border-top:1px solid rgba(0,0,0,.06)}
+  .mtbl-wrap .card-del{position:absolute;top:6px;right:10px}
+  .mlist .new-tbl-btn{min-height:50px;align-self:center;width:220px}
   .grid{max-width:900px;margin:0 auto 32px;display:flex;flex-wrap:wrap;gap:24px;justify-content:center}
   .card{display:inline-block;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.12);border:1.5px solid #ccc;background:#fff;flex-shrink:0;position:relative}
   .etbl{border-collapse:collapse;font-size:8.5pt}
@@ -72,7 +89,7 @@
 
 <h2 class="sec-title" id="sec-met">Metricas</h2>
 <nav class="nav" id="mnav"></nav>
-<div class="grid" id="mgrid"></div>
+<div class="mlist" id="mgrid"></div>
 
 <h2 class="sec-title" id="sec-ent">Modelo de Datos</h2>
 <nav class="nav" id="nav"></nav>
@@ -335,21 +352,21 @@ function render(){
     mnav.appendChild(a);
   });
 
-  // Metric grid
+  // Metric list (normal tables)
   var mgrid=document.getElementById('mgrid');mgrid.innerHTML='';
   state.metrics.forEach(function(cat,mi){
-    var col=cat.color,txc=tc(col),lb=rga(col,.10),hb=rga(col,.85),cb=rga(col,.55);
+    var col=cat.color,txc=tc(col),lb=rga(col,.05),hb=rga(col,.85),cb=rga(col,.45);
     var ncols=cat.heads.length+2;
     var h='<button class="card-del" data-sec="m" data-gi="'+mi+'" title="Eliminar">&times;</button>';
-    h+='<table class="etbl">';
-    h+='<tr><th colspan="'+ncols+'" class="eh" style="background:'+hb+';color:'+txc+'"><span contenteditable="true" data-sec="m" data-gi="'+mi+'" data-f="name">'+esc(cat.name)+'</span></th></tr>';
-    h+='<tr><th class="ch" style="background:'+cb+';color:'+txc+';width:20px"></th>';
+    h+='<table class="mtbl">';
+    h+='<tr><th colspan="'+ncols+'" class="mh" style="background:'+hb+';color:'+txc+'"><span contenteditable="true" data-sec="m" data-gi="'+mi+'" data-f="name">'+esc(cat.name)+'</span></th></tr>';
+    h+='<tr><th class="mc" style="background:'+cb+';color:'+txc+';width:30px"></th>';
     cat.heads.forEach(function(hd,hi){
-      h+='<th class="ch" style="background:'+cb+';color:'+txc+'"><span contenteditable="true" data-sec="m" data-gi="'+mi+'" data-hi="'+hi+'" data-f="head">'+esc(hd)+'</span></th>';
+      h+='<th class="mc" style="background:'+cb+';color:'+txc+'"><span contenteditable="true" data-sec="m" data-gi="'+mi+'" data-hi="'+hi+'" data-f="head">'+esc(hd)+'</span></th>';
     });
-    h+='<th class="ch" style="background:'+cb+';color:'+txc+';width:16px"></th></tr>';
+    h+='<th class="mc" style="background:'+cb+';color:'+txc+';width:24px"></th></tr>';
     cat.items.forEach(function(it,ri){
-      var bg=it.ck?rga(col,.22):lb;
+      var bg=it.ck?rga(col,.18):((ri%2===0)?'#fff':lb);
       h+='<tr style="background:'+bg+'">';
       h+='<td><input type="checkbox"'+(it.ck?' checked':'')+' data-sec="m" data-gi="'+mi+'" data-ri="'+ri+'"/></td>';
       it.v.forEach(function(val,ci){
@@ -360,9 +377,9 @@ function render(){
     });
     h+='</table>';
     h+='<div class="add-row"><button data-sec="m" data-gi="'+mi+'">+ metrica</button></div>';
-    var card=document.createElement('div');card.className='card';card.id='mc-'+cat.id;
-    card.style.borderColor=rga(col,.4);card.innerHTML=h;
-    mgrid.appendChild(card);
+    var wrap=document.createElement('div');wrap.className='mtbl-wrap';wrap.id='mc-'+cat.id;
+    wrap.innerHTML=h;
+    mgrid.appendChild(wrap);
   });
   // New metric category button
   var nmb=document.createElement('div');nmb.className='new-tbl-btn';
@@ -431,7 +448,7 @@ document.addEventListener('change',function(e){
     var ri=+e.target.dataset.ri;
     state.metrics[gi].items[ri].ck=e.target.checked;save();
     var tr=e.target.closest('tr'),col=state.metrics[gi].color;
-    tr.style.background=e.target.checked?rga(col,.22):rga(col,.10);
+    tr.style.background=e.target.checked?rga(col,.18):(ri%2===0?'#fff':rga(col,.05));
     updateProgress();
   }
   if(sec==='e'&&e.target.dataset.ai!==undefined){
