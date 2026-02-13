@@ -242,10 +242,15 @@ var defaultMetrics = [
 
 // ========== DEFAULT ENTITIES ==========
 var defaultEntities = [
+  // ── Core/Auth ──
+  {id:"user",name:"USER",color:C.pink,attrs:[
+    ["id","Identificador unico","UUID"],["role","Rol del usuario","ENUM"],["name","Nombre completo","STRING"],["mail","Correo electronico","STRING"]]},
+  // ── Students ──
   {id:"estudiante",name:"ESTUDIANTE",color:C.yellow,attrs:[
-    ["id","Identificador unico","UUID"],["nombre","Nombre completo","STRING"],["estado","Activo|Inactivo|Suspendido","ENUM"],
+    ["id","Identificador unico","UUID"],["userId","FK al usuario","UUID"],["nombre","Nombre completo","STRING"],["estado","Activo|Inactivo|Suspendido","ENUM"],
     ["carrera","Programa academico","STRING"],["facultad","Facultad de pertenencia","STRING"],["semestre","Semestre cursando (1-12+)","INT"],
-    ["cohorte","Ano-periodo de ingreso","STRING"],["region","Region de residencia","STRING"],["ultimaActividad","Ultimo evento en LMS","DATETIME"],
+    ["cohorte","Ano-periodo de ingreso","STRING"],["region","Region de residencia","STRING"],["streak","Dias consecutivos activo","INT"],
+    ["ultimaActividad","Ultimo evento en LMS","DATETIME"],
     ["sesionesTotales","Total sesiones en periodo","INT"],["sesionesPorSemana","Promedio semanal sesiones","FLOAT"],
     ["gapMedioHoras","Horas promedio entre sesiones","FLOAT"],["actividadFinDeSemana","% actividad fin de semana","FLOAT"],
     ["entropiaNavegacion","Diversidad patrones navegacion","FLOAT"],["riesgoActual","Suma ponderada 6 factores (0-100)","INT"],
@@ -253,86 +258,114 @@ var defaultEntities = [
     ["probabilidadExito","Output modelo XGBoost (0-100%)","FLOAT"],["responsividad","Tasa respuesta intervenciones","FLOAT"],
     ["tiempoMedioRespuesta","Promedio horas hasta responder","FLOAT"],["intervencionesActivas","Intervenciones en progreso","INT"]]},
   {id:"perfil-ingreso",name:"PERFIL DE INGRESO",color:C.yellow,attrs:[
+    ["id","Identificador unico","UUID"],["estudianteId","FK al estudiante","UUID"],
     ["paesMatematica1","Puntaje PAES Mat 1 (100-1000)","INT"],["paesMatematica2","Puntaje PAES Mat 2 (100-1000)","INT"],
     ["paesLectora","Puntaje PAES Lectora (100-1000)","INT"],["paesCiencias","Puntaje PAES Ciencias (100-1000)","INT"],
     ["nem","Nota Ensenanza Media (1.0-7.0)","FLOAT"],["ranking","Ranking en establecimiento","INT"],
     ["tipoEstablecimiento","Municipal|SLEP|Subvencionado|Particular","STRING"],["region","Region de origen","STRING"],
     ["sector","Urbano | Rural","STRING"],["quintil","Quintil socioeconomico (1-5)","INT"],
     ["tieneBeca","Si tiene beca","BOOL"],["tipoBeca","Tipo de beca asignada","STRING"],
-    ["primeraGeneracion","Primera generacion universitaria","BOOL"],["trabaja","Trabaja mientras estudia","BOOL"]]},
-  {id:"learning-goal",name:"LEARNING GOAL",color:C.yellow,attrs:[
-    ["id","Identificador unico","UUID"],["estudianteId","FK al estudiante","UUID"],["titulo","Titulo de la meta","STRING"],
-    ["dificultad","Facil|Media|Dificil","ENUM"],["progreso","Progreso actual (0-100)","INT"],
-    ["completada","Meta completada","BOOL"],["esPersonalizada","Creada por el estudiante","BOOL"]]},
-  {id:"learning-style",name:"LEARNING STYLE",color:C.yellow,attrs:[
-    ["name","Visual|Auditivo|Lectura|Kinestesico","STRING"],["score","Afinidad con el estilo (0-100)","INT"],
-    ["description","Descripcion del estilo","STRING"],["recommendations","Recomendaciones para el estilo","STRING[]"]]},
-  {id:"competence-area",name:"COMPETENCE AREA",color:C.yellow,attrs:[
-    ["name","Nombre de la competencia","STRING"],["value","Nivel de dominio (0-100)","INT"],
-    ["description","Descripcion de la competencia","STRING"],["relatedCourses","Cursos asociados","STRING[]"]]},
-  {id:"learning-path",name:"LEARNING PATH",color:C.yellow,attrs:[
-    ["id","Identificador unico","UUID"],["title","Nombre del camino","STRING"],["description","Descripcion corta","STRING"],
-    ["prerequisitesMet","Cumple requisitos","BOOL"],["isRecommended","Recomendado para estudiante","BOOL"],
-    ["difficulty","Dificultad (1-5)","INT"],["timeCommitment","Dedicacion (ej: 4-6 hrs/sem)","STRING"],
-    ["benefits","Beneficios del camino","STRING[]"],["skills","Habilidades que desarrolla","STRING[]"]]},
-  {id:"community-metrics",name:"COMMUNITY METRICS",color:C.yellow,attrs:[
-    ["estudianteId","FK al estudiante","UUID"],["participationLevel","Nivel participacion (0-100)","INT"],
-    ["responseRate","Tasa respuesta (0-100)","INT"],["discussionCount","Participaciones en discusiones","INT"],
-    ["helpfulResponsesGiven","Respuestas utiles dadas","INT"],["questionsAsked","Preguntas realizadas","INT"],
-    ["connectionsFormed","Conexiones formadas","INT"]]},
+    ["primeraGeneracion","Primera generacion universitaria","BOOL"],["trabaja","Trabaja mientras estudia","BOOL"],
+    ["ciudad","Ciudad de origen","STRING"],["direccion","Direccion de residencia","STRING"]]},
+  {id:"enrollment",name:"ENROLLMENT",color:C.gray,attrs:[
+    ["userId","FK al usuario","UUID"],["courseId","FK al curso","UUID"],["grade","Nota final","FLOAT"],["outcome","Aprobado|Reprobado|EnCurso","ENUM"]]},
+  // ── Academic ──
   {id:"curso",name:"CURSO",color:C.red,attrs:[
     ["id","Identificador unico","UUID"],["codigo","Codigo con seccion (MAT101-P01)","VARCHAR"],["codigoBase","Codigo sin seccion","VARCHAR"],
     ["nombre","Nombre de la asignatura","STRING"],["seccion","Identificador de seccion","VARCHAR"],["creditos","Creditos academicos","INT"],
     ["semestre","Codigo de periodo (2025-2)","VARCHAR"],["ano","Ano academico","INT"],["fechaInicio","Inicio del periodo","DATETIME"],
-    ["fechaFin","Fin del periodo","DATETIME"],["totalEstudiantes","Total inscritos","INT"],["riesgoCurso","Riesgo ponderado (0-100)","INT"],
+    ["fechaFin","Fin del periodo","DATETIME"],["isActive","Curso activo","BOOL"],["totalEstudiantes","Total inscritos","INT"],
+    ["riesgoCurso","Riesgo ponderado (0-100)","INT"],
     ["nivelRiesgoCurso","Estable|Moderado|Critico","ENUM"],["distribucionRiesgo","{muyBajo,bajo,medio,alto,muyAlto}","JSON"],
     ["pctEstudiantesRiesgo","% estudiantes riesgo alto","FLOAT"],["rankingRiesgo","Posicion por riesgo DESC","INT"],
     ["participacionPromedio","Participacion semestral %","FLOAT"],["participacionCorta","Participacion 7 dias %","FLOAT"],
     ["tendenciaParticipacion","Subiendo|Estable|Bajando","ENUM"]]},
+  {id:"evaluacion",name:"EVALUACION",color:C.gray,attrs:[
+    ["cursoId","FK al curso","UUID"],["tipo","Control|Prueba|Examen|Tarea|Quiz","ENUM"],["fecha","Fecha de la evaluacion","DATETIME"],
+    ["pesoCalificacion","Peso en calificacion (%)","FLOAT"],["promedio","Nota promedio (1.0-7.0)","FLOAT"],
+    ["mediana","Mediana de notas","FLOAT"],["tasaAprobacion","Tasa aprobacion (%)","FLOAT"]]},
+  {id:"evento-academico",name:"EVENTO ACADEMICO",color:C.gray,attrs:[
+    ["id","Identificador unico","UUID"],["cursoId","FK al curso","UUID"],["tipo","Clase|Ayudantia|Lab|Evaluacion|Entregable","ENUM"],
+    ["fecha","Fecha del evento","DATETIME"],["duracion","Duracion en minutos","INT"],["recurrente","Si es recurrente","BOOL"]]},
+  {id:"asistencia",name:"ASISTENCIA",color:C.gray,attrs:[
+    ["estudianteId","FK al estudiante","UUID"],["eventoId","FK al evento academico","UUID"],
+    ["estado","Presente|Ausente|Justificado|Tardanza","ENUM"],["patronInasistencias","Inasistencias consecutivas","INT"],
+    ["grade","Nota asociada","FLOAT"]]},
+  // ── Learning ──
+  {id:"learning-goal",name:"LEARNING GOAL",color:C.yellow,attrs:[
+    ["id","Identificador unico","UUID"],["estudianteId","FK al estudiante","UUID"],["titulo","Titulo de la meta","STRING"],
+    ["dificultad","Facil|Media|Dificil","ENUM"],["progreso","Progreso actual (0-100)","INT"],
+    ["completada","Meta completada","BOOL"],["esPersonalizada","Creada por el estudiante","BOOL"]]},
+  {id:"academic-goal",name:"ACADEMIC GOAL",color:C.gray,attrs:[
+    ["estudianteId","FK al estudiante","UUID"],["cursoId","FK al curso","UUID"]]},
+  {id:"learning-path",name:"LEARNING PATH",color:C.yellow,attrs:[
+    ["id","Identificador unico","UUID"],["title","Nombre del camino","STRING"],["description","Descripcion corta","STRING"],
+    ["eventId","FK al evento academico","UUID"],["resourceId","FK al recurso LMS","UUID"],
+    ["prerequisitesMet","Cumple requisitos","BOOL"],["isRecommended","Recomendado para estudiante","BOOL"],
+    ["difficulty","Dificultad (1-5)","INT"],["timeCommitment","Dedicacion (ej: 4-6 hrs/sem)","STRING"],
+    ["benefits","Beneficios del camino","STRING[]"],["skills","Habilidades que desarrolla","STRING[]"]]},
+  {id:"hito-aprendizaje",name:"HITO DE APRENDIZAJE",color:C.orange,attrs:[
+    ["id","Identificador unico","UUID"],["cursoId","FK al curso","UUID"],["nombre","Nombre del hito","STRING"],
+    ["orden","Orden secuencial","INT"],["dificultad","Dificultad (1-5)","INT"],["tiempoEstimado","Tiempo estimado","STRING"],
+    ["criterioComplecion","Reglas de completitud","JSON"]]},
+  {id:"student-learning-path",name:"STUDENT LEARNING PATH",color:C.gray,attrs:[
+    ["estudianteId","FK al estudiante","UUID"],["resourceId","FK al recurso LMS","UUID"],["isViewed","Recurso visualizado","BOOL"],
+    ["viewDate","Fecha de visualizacion","DATETIME"],["difficulty","Dificultad percibida (1-5)","INT"],
+    ["utility","Utilidad percibida (1-5)","INT"],["studyTime","Tiempo de estudio (minutos)","INT"]]},
+  // ── LMS ──
+  {id:"recurso-lms",name:"RECURSO LMS",color:C.orange,attrs:[
+    ["id","Identificador unico","UUID"],["cursoId","FK al curso","UUID"],["nombre","Nombre del recurso","STRING"],["url","URL del recurso","STRING"],
+    ["tipo","Comunicacion|Contenido|Evaluacion","ENUM"],
+    ["consumoTotal","Consumo total del recurso","INT"],["tendenciaUso","Subiendo|Estable|Bajando","ENUM"],
+    ["avgDifficulty","Dificultad promedio percibida","FLOAT"],["avgUtility","Utilidad promedio percibida","FLOAT"]]},
+  {id:"lms-assignment",name:"LMS ASSIGNMENT",color:C.orange,attrs:[
+    ["id","Identificador unico","UUID"],["recursoId","FK al recurso LMS","UUID"]]},
+  {id:"lms-discussion",name:"LMS DISCUSSION",color:C.orange,attrs:[
+    ["id","Identificador unico","UUID"],["recursoId","FK al recurso LMS","UUID"]]},
+  {id:"lms-submission",name:"LMS SUBMISSION",color:C.orange,attrs:[
+    ["id","Identificador unico","UUID"],["recursoId","FK al recurso LMS","UUID"]]},
+  {id:"lms-anuncio",name:"LMS ANUNCIO",color:C.orange,attrs:[
+    ["id","Identificador unico","UUID"],["recursoId","FK al recurso LMS","UUID"]]},
+  // ── Professors ──
   {id:"docente",name:"DOCENTE",color:C.blue,attrs:[
-    ["id","Identificador unico","UUID"],["nombre","Nombre completo","STRING"],["anosExperiencia","Anos de docencia","INT"],
+    ["id","Identificador unico","UUID"],["userId","FK al usuario","UUID"],["nombre","Nombre completo","STRING"],["anosExperiencia","Anos de docencia","INT"],
     ["tipoContrato","Regular|Part-time|Adjunto","ENUM"],["puntajeECA","Evaluacion docente (1.0-7.0)","FLOAT"],
     ["totalCursos","Cantidad cursos que imparte","INT"],["totalEstudiantes","Suma estudiantes en cursos","INT"],
     ["sesionesLMS","Sesiones Canvas 7 dias","INT"],["sesionesTM3","Sesiones TM3 7 dias","INT"],
     ["recursosPublicados","Recursos publicados 7 dias","INT"],["mensajesEnviados","Mensajes enviados 7 dias","INT"],
     ["riesgoDocente","Promedio riesgo de cursos","FLOAT"]]},
   {id:"course-staff",name:"COURSE STAFF",color:C.blue,attrs:[
-    ["id","Identificador unico","UUID"],["name","Nombre completo","STRING"],["role","Titular|Ayudante|Coordinador","STRING"],
+    ["id","Identificador unico","UUID"],["userId","FK al usuario","UUID"],["name","Nombre completo","STRING"],["role","Titular|Ayudante|Coordinador","STRING"],
     ["email","Correo electronico","STRING"],["photo","URL foto o iniciales","STRING"],["availability","{days, hours}","JSON"],
     ["expertise","Areas de especialidad","STRING[]"],["responseRate","Tasa de respuesta (0-100)","INT"],["courseId","FK al curso","UUID"]]},
+  // ── Interventions ──
   {id:"intervencion",name:"INTERVENCION",color:C.green,attrs:[
     ["id","Identificador unico","UUID"],["tipo","Mensaje|Llamada|Ayudantia|Taller|Mentoria","ENUM"],["estrategia","STEM|Teorico","ENUM"],
     ["intensidad","Leve|Intensiva","ENUM"],["estudianteId","FK al estudiante","UUID"],["cursoId","FK al curso (opcional)","UUID?"],
+    ["enrollmentId","FK a la inscripcion (opcional)","UUID?"],
     ["fechaInicio","Inicio de la intervencion","DATETIME"],["fechaCierre","Cierre (null si activa)","DATETIME?"],
     ["tiempoRespuesta","Horas hasta primera respuesta","FLOAT"],["nIntentos","Intentos de contacto","INT"],
     ["estado","Exitosa|EnProgreso|SinRespuesta|Fallida","ENUM"],["nRespuestasPositivas","Respuestas favorables","INT"],
     ["deltaRiesgoPost","Cambio riesgo post (-100 a +100)","INT"]]},
-  {id:"recurso-lms",name:"RECURSO LMS",color:C.orange,attrs:[
-    ["cursoId","FK al curso","UUID"],["tipo","Comunicacion|Contenido|Evaluacion","ENUM"],
-    ["consumoTotal","Consumo total del recurso","INT"],["tendenciaUso","Subiendo|Estable|Bajando","ENUM"]]},
-  {id:"hito-aprendizaje",name:"HITO DE APRENDIZAJE",color:C.orange,attrs:[
-    ["id","Identificador unico","UUID"],["cursoId","FK al curso","UUID"],["nombre","Nombre del hito","STRING"],
-    ["orden","Orden secuencial","INT"],["dificultad","Dificultad (1-5)","INT"],["tiempoEstimado","Tiempo estimado","STRING"],
-    ["criterioComplecion","Reglas de completitud","JSON"]]},
+  // ── Gamification ──
   {id:"achievement",name:"ACHIEVEMENT",color:C.pink,attrs:[
     ["id","Identificador unico","UUID"],["nombre","Nombre del logro","STRING"],["descripcion","Descripcion del logro","STRING"],
     ["tipo","consistencia|academico|social|exploracion","ENUM"],["valorRequerido","Valor para desbloquear","INT"],["icono","Icono del logro","STRING"]]},
-  {id:"support-contact",name:"SUPPORT CONTACT",color:C.pink,attrs:[
-    ["id","Identificador unico","UUID"],["tipo","email|instagram|telefono|web","ENUM"],["valor","Email, URL o telefono","STRING"],
-    ["label","Etiqueta descriptiva","STRING"],["activo","Contacto activo","BOOL"]]},
-  {id:"evaluacion",name:"EVALUACION",color:C.gray,attrs:[
-    ["cursoId","FK al curso","UUID"],["tipo","Control|Prueba|Examen|Tarea|Quiz","ENUM"],["fecha","Fecha de la evaluacion","DATETIME"],
-    ["pesoCalificacion","Peso en calificacion (%)","FLOAT"],["promedio","Nota promedio (1.0-7.0)","FLOAT"],
-    ["mediana","Mediana de notas","FLOAT"],["tasaAprobacion","Tasa aprobacion (%)","FLOAT"]]},
-  {id:"evento-academico",name:"EVENTO ACADEMICO",color:C.gray,attrs:[
-    ["cursoId","FK al curso","UUID"],["tipo","Clase|Ayudantia|Lab|Evaluacion|Entregable","ENUM"],["fecha","Fecha del evento","DATETIME"],
-    ["duracion","Duracion en minutos","INT"],["recurrente","Si es recurrente","BOOL"]]},
-  {id:"asistencia",name:"ASISTENCIA",color:C.gray,attrs:[
-    ["estudianteId","FK al estudiante","UUID"],["eventoId","FK al evento academico","UUID"],
-    ["estado","Presente|Ausente|Justificado|Tardanza","ENUM"],["patronInasistencias","Inasistencias consecutivas","INT"]]},
   {id:"student-achievement",name:"STUDENT ACHIEVEMENT",color:C.gray,attrs:[
     ["estudianteId","FK al estudiante","UUID"],["achievementId","FK al logro","UUID"],["valorActual","Progreso actual","INT"],
     ["porcentaje","Completado (0-100)","INT"],["estado","en_progreso|conseguido","ENUM"],["fechaConseguido","Fecha logro (null si no)","DATETIME?"]]},
+  {id:"learning-style",name:"LEARNING STYLE",color:C.yellow,attrs:[
+    ["name","Visual|Auditivo|Lectura|Kinestesico","STRING"],["score","Afinidad con el estilo (0-100)","INT"],
+    ["description","Descripcion del estilo","STRING"],["recommendations","Recomendaciones para el estilo","STRING[]"]]},
+  {id:"competence-area",name:"COMPETENCE AREA",color:C.yellow,attrs:[
+    ["name","Nombre de la competencia","STRING"],["value","Nivel de dominio (0-100)","INT"],
+    ["description","Descripcion de la competencia","STRING"],["relatedCourses","Cursos asociados","STRING[]"]]},
+  // ── Community ──
+  {id:"community-metrics",name:"COMMUNITY METRICS",color:C.yellow,attrs:[
+    ["estudianteId","FK al estudiante","UUID"],["courseId","FK al curso","UUID"],["participationLevel","Nivel participacion (0-100)","INT"],
+    ["responseRate","Tasa respuesta (0-100)","INT"],["discussionCount","Participaciones en discusiones","INT"],
+    ["helpfulResponsesGiven","Respuestas utiles dadas","INT"],["questionsAsked","Preguntas realizadas","INT"],
+    ["connectionsFormed","Conexiones formadas","INT"]]},
   {id:"community-channel",name:"COMMUNITY CHANNEL",color:C.gray,attrs:[
     ["id","Identificador unico","UUID"],["type","telegram|whatsapp|discord|teams","ENUM"],["link","URL del canal","STRING"],
     ["name","Nombre del canal","STRING"],["description","Descripcion corta","STRING"],["memberCount","Cantidad de miembros","INT"],
@@ -340,7 +373,11 @@ var defaultEntities = [
   {id:"study-group",name:"STUDY GROUP",color:C.gray,attrs:[
     ["id","Identificador unico","UUID"],["name","Nombre del grupo","STRING"],["courseId","FK al curso","UUID"],
     ["members","Cantidad de miembros","INT"],["focus","Objetivo del grupo","STRING"],["meetingTime","Horario reunion","STRING"],
-    ["isOpen","Acepta nuevos miembros","BOOL"],["createdBy","FK al estudiante creador","UUID"]]}
+    ["isOpen","Acepta nuevos miembros","BOOL"],["createdBy","FK al estudiante creador","UUID"]]},
+  // ── Support ──
+  {id:"support-contact",name:"SUPPORT CONTACT",color:C.pink,attrs:[
+    ["id","Identificador unico","UUID"],["tipo","email|instagram|telefono|web","ENUM"],["valor","Email, URL o telefono","STRING"],
+    ["label","Etiqueta descriptiva","STRING"],["activo","Contacto activo","BOOL"]]}
 ];
 
 // ========== FIREBASE ==========
@@ -365,7 +402,7 @@ if(FIREBASE_CONFIG.apiKey){
 }
 
 // ========== STANDARD EXTRA COLUMNS ==========
-var FUENTE_OPTIONS=["","Campo calculado","Feature","Prediction","CANVAS"];
+var FUENTE_OPTIONS=["","Campo calculado","Feature","Prediction","CANVAS","QUERY","Manual"];
 var STD_COLS=[{key:"calculo",label:"Calculo",type:"text"},{key:"fuente",label:"Fuente",type:"dropdown_src"},{key:"ubicacion",label:"Ubicacion",type:"dropdown_tbl"},{key:"vistas",label:"Vistas",type:"text"}];
 function headHas(heads,key){var k=key.toLowerCase(),ks=k.replace(/s$/,'');return heads.some(function(h){var l=h.toLowerCase();return l===k||l===ks||l+'s'===k})}
 
@@ -380,6 +417,30 @@ else if(!state.metrics){state.metrics=initMetrics()}
 if(state.metrics){state.metrics.forEach(function(cat){cat.items.forEach(function(it){if(it.fuente===undefined)it.fuente=it.src||"";if(it.ubicacion===undefined)it.ubicacion=it.tbl||"";if(it.calculo===undefined)it.calculo="";if(it.vistas===undefined)it.vistas="";delete it.src;delete it.tbl})})}
 // Migrate Riesgo: remove Calculo and Ubicacion from heads if still present
 if(state.metrics){state.metrics.forEach(function(cat){if(cat.id==='m-riesgo'){var rm=[];cat.heads.forEach(function(h,i){var l=h.toLowerCase();if(l==='calculo'||l==='ubicacion')rm.push(i)});if(rm.length){for(var i=rm.length-1;i>=0;i--){cat.heads.splice(rm[i],1);cat.items.forEach(function(it){if(it.v.length>rm[i])it.v.splice(rm[i],1)})}}}})}
+// Migrate: merge CSV entities into existing state (preserves checkboxes)
+;(function(){
+  var defMap={};defaultEntities.forEach(function(e){defMap[e.id]=e});
+  var stateIds={};state.entities.forEach(function(e){stateIds[e.id]=true});
+  var changed=false;
+  // Add new attrs to existing entities
+  state.entities.forEach(function(ent){
+    var def=defMap[ent.id];if(!def)return;
+    var has={};ent.attrs.forEach(function(a){has[a.n]=true});
+    def.attrs.forEach(function(da){if(!has[da[0]]){ent.attrs.push({n:da[0],d:da[1],t:da[2],ck:false});changed=true}});
+  });
+  // Add entirely new entities
+  defaultEntities.forEach(function(def){
+    if(!stateIds[def.id]){state.entities.push({id:def.id,name:def.name,color:def.color,attrs:def.attrs.map(function(a){return{n:a[0],d:a[1],t:a[2],ck:false}})});changed=true}
+  });
+  // Reorder to match defaultEntities grouping
+  var order=defaultEntities.map(function(e){return e.id});
+  var entMap={};state.entities.forEach(function(e){entMap[e.id]=e});
+  var sorted=[];order.forEach(function(id){if(entMap[id])sorted.push(entMap[id])});
+  state.entities.forEach(function(e){if(order.indexOf(e.id)===-1)sorted.push(e)});
+  if(JSON.stringify(sorted.map(function(e){return e.id}))!==JSON.stringify(state.entities.map(function(e){return e.id}))){changed=true}
+  state.entities=sorted;
+  if(changed)localStorage.setItem('tm3_state',JSON.stringify(state));
+})();
 
 function save(){
   localStorage.setItem('tm3_state',JSON.stringify(state));
